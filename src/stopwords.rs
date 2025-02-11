@@ -8,7 +8,7 @@ pub fn is_stop(token: &str) -> bool {
     const STOP: &[&str] = &[
         "a", "the", "and","of", "in", "to", "on", "an", "with"
     ];
-    STOP.contains(token)
+    STOP.contains(&token)
 }
 
 
@@ -25,13 +25,13 @@ mod test {
              ("the", true),
              ("and", true),
              ("of", true), 
-             ("in" true),
-             ("to", true)
+             ("in", true),
+             ("to", true),
              ("on", true),
-             ( "an", true),
-             ("with" true),
+             ("an", true),
+             ("with", true),
              ("tada", false),
-             ("red", 1)
+             ("red", false)
         ];
         for test in tests {
             let is_stop_w = is_stop(test.0);

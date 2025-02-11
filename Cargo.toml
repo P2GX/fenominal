@@ -1,0 +1,8 @@
+[package]
+name = "ferriphene"
+version = "0.1.0"
+description = "HPO-based text mining. Rust version of fenominal"
+edition = "2021"
+
+[dependencies]
+ontolius = { git = 'https://github.com/ielis/ontolius.git', tag = 'v0.4.0' }
