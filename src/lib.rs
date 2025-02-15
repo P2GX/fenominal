@@ -2,7 +2,7 @@
 
 mod core_document;
 mod fenominal_traits;
-mod hpo;
+pub mod hpo;
 mod mined_term;
 mod simple_sentence;
 mod simple_token;
