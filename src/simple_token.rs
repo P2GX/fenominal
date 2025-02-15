@@ -32,6 +32,14 @@ impl SimpleToken {
         self.original_token.to_lowercase()
     }
 
+    pub fn get_start_pos(&self) -> usize {
+        self.start_pos
+    }
+
+    pub fn get_end_pos(&self) -> usize {
+        self.end_pos
+    }
+
 }
 
 

@@ -1,0 +1,92 @@
+use std::{cmp::min, collections::HashMap, iter::Map};
+
+use crate::{hpo::partition::Partition, mined_term::MinedTerm, simple_token::SimpleToken};
+
+use super::default_hpo_mapper::DefaultHpoMapper;
+
+
+
+
+pub struct SentenceMapper {
+    hpo_mapper: DefaultHpoMapper,
+}
+
+
+impl SentenceMapper {
+    pub fn new(mapper: DefaultHpoMapper) -> Self {
+        SentenceMapper{
+            hpo_mapper: mapper
+        }
+    }  
+
+    pub fn map_sentence(&self, tokens: &[SimpleToken]) -> Vec<MinedTerm> {
+        let mut candidates: HashMap<usize, Vec<MinedTerm>> = HashMap::new();
+        let max_partition_heuristic = min(10, tokens.len());
+        for i in 1..=max_partition_heuristic {
+            let partition = Partition::new(tokens.to_vec(), i);
+            for chunk in partition.get_chunks() {
+                if chunk.len() < i {
+                    continue; // last portion is smaller, we will get it in corresponding loop (i is current chunk size)
+                }
+                let string_chunks: Vec<String> = chunk
+                    .iter()
+                    .map(|stoken| stoken.get_original_token())
+                    .map(|str| str.to_string())
+                    .collect();
+                match self.hpo_mapper.get_match(string_chunks) {
+                    Some(hpo_match) => {
+                        let hpo_id = hpo_match.get_term_id();
+                        let observed = true; // TODO -- decorator
+                        let start_chunk = chunk.get(0);
+                        let end_chunk = chunk.get(chunk.len() - 1);
+                        if start_chunk.is_none() || end_chunk.is_none() {
+                            continue; // should never happen
+                        }
+                        let startpos = start_chunk.unwrap().get_start_pos();
+                        let endpos = end_chunk.unwrap().get_end_pos();
+                        let mapped_sentence_part = MinedTerm::new(chunk.to_vec(),
+                                        hpo_id,
+                                        startpos,
+                                        endpos,
+                                        "matching",
+                                        observed);
+                        //// insert a default value (empty vector) if the key is not present, then add the concept to the list
+                        candidates.entry(startpos).or_insert(Vec::new()).push(mapped_sentence_part);
+                    },
+                    None => {} // do nothing if no match
+                }
+            }
+        }
+        // When we get here, we have zero, one, or more MappedSentenceParts.
+        // Our heuristic is to take the longest match first
+        // First get and sort the start positions
+        let mut start_pos_list: Vec<usize> = candidates.keys().cloned().collect();
+        start_pos_list.sort();
+        let mut current_span = 0;
+        let mut mapped_sentence_part_list = Vec::new();
+        for i in start_pos_list {
+            if i < current_span {
+                continue;
+            }
+            let mut candidates_at_pos_i = candidates.get(&i);
+            if candidates_at_pos_i.is_some() {
+                let candidates_at_pos_i = candidates_at_pos_i.unwrap();
+                let longest_match = candidates_at_pos_i
+                    .iter()
+                    .max_by(|a, b| a.get_end_pos().cmp(&b.get_end_pos()));
+                if longest_match.is_some() {
+                    let longest_match = longest_match.unwrap();
+                    current_span = longest_match.get_end_pos();
+                    mapped_sentence_part_list.push(longest_match.clone());
+                    // advance to the last position of the current match
+                    // note that this is String position convention, and so the next hist could start at
+                    // currentSpan, but cannot be less than currentSpan without overlapping.
+                }
+            }  
+        }
+        mapped_sentence_part_list
+    }
+
+
+}
+

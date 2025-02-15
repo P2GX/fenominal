@@ -5,6 +5,7 @@ use crate::simple_token::SimpleToken;
 
 
 /// DetailedMinedTerm in Java
+#[derive(Clone)]
 pub struct MinedTerm {
     tokens: Vec<SimpleToken>,
     term_id: TermId,
@@ -42,5 +43,21 @@ impl MinedTerm {
                 matching_string: matching.into(),
                 is_observed: observed
             }
-        }
+    }
+
+
+    pub fn get_start_pos(&self) -> usize {
+        self.start_pos
+    }
+
+    pub fn get_end_pos(&self) -> usize {
+        self.end_pos
+    }
+}
+
+
+impl std::fmt::Display for MinedTerm {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "MinedTerm(id: {}, start: {}  end: {})", self.term_id, self.start_pos, self.end_pos)
+    }
 }

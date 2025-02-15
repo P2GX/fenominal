@@ -1,3 +1,5 @@
+use ontolius::base::TermId;
+
 use super::hpo_concept::HpoConcept;
 
 
@@ -18,4 +20,8 @@ impl HpoConceptHit {
             n_matching_words: n_matches
         }
     }
+
+    pub fn get_term_id(&self) -> TermId {
+        self.hpo_concept.get_hpo_id()
+    } 
 }

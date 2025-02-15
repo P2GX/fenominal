@@ -1,7 +1,7 @@
 use clap::Parser;
 use ontolius::{io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology};
 use std::path::PathBuf;
-use ferriphene::hpo::default_hpo_mapper::DefaultHpoMapper;
+use ferriphene::hpo::{clinical_mapper::{self, ClinicalMapper}, default_hpo_mapper::DefaultHpoMapper};
 
 
 #[derive(Parser, Debug)]
@@ -28,7 +28,12 @@ fn main() {
     println!("Input string: {}", input_string);
     let hpo: MinimalCsrOntology = loader.load_from_path(hp_json_path)
                         .expect("HPO could not be loaded");
-    let hp_matcher = DefaultHpoMapper::new(hpo);
+    
+    let mut clinical_mapper = ClinicalMapper::new(hpo);
+    let matching = clinical_mapper.map_text(&input_string);
+    for m in matching {
+        println!("{}", m);
+    }
     //let match = hp_matcher.g
     
     
