@@ -1,11 +1,25 @@
+//! # ClinicalMapper Module
+//!
+//! This module defines the `ClinicalMapper` struct, which is the struct that performs the text-mining of input texts.
+//! See [`simple_hpo_parser`] for an example of how to construct a `ClinicalMapper` struct.
+//!
+//! [`simple_hpo_parser`]: ../simple_hpo_parser/index.html
+//! 
+//! // file:///Users/robin/GIT/ferriphene/target/doc/ferriphene/hpo/clinical_mapper/ferriphene.hpo.simple_hpo_parser.html
+//! file:///Users/robin/GIT/ferriphene/target/doc/ferriphene/hpo/simple_hpo_parser/index.html
+//! ## Example
+//!
+//! ```no_run
+//! let mined_term_list = clinical_mappper.map_text(&input_string); 
+//! for mt in mined_term_list {
+//!     println!("{}", mt)}
+//! }
+//! ```
+
 use std::collections::HashMap;
-
-use ontolius::{base::TermId, ontology::csr::{CsrOntology, MinimalCsrOntology}};
-
+use ontolius::{base::TermId, ontology::csr::MinimalCsrOntology};
 use crate::{core_document::CoreDocument, mined_term::MinedTerm};
-
-use super::{default_hpo_mapper::{self, DefaultHpoMapper}, hpo_concept_mapper::HpoConceptMapper, sentence_mapper::SentenceMapper};
-
+use super::{default_hpo_mapper::DefaultHpoMapper, sentence_mapper::SentenceMapper};
 
 
 

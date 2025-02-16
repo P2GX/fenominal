@@ -4,7 +4,26 @@ use crate::{hpo::partition::Partition, mined_term::MinedTerm, simple_token::Simp
 
 use super::default_hpo_mapper::DefaultHpoMapper;
 
+use std::collections::HashSet;
+use once_cell::sync::Lazy;
 
+
+/// This is a set of words that we use to indentify exclusion (negation) of phenotypic abnormality
+/// 
+/// e.g. "Proband 1 did not have arachnodactyly" would be flagged as negated because of the word "not".
+static NEGATION_CLUES: Lazy<HashSet<String>> = Lazy::new(|| {
+    let mut set = HashSet::new();
+    set.insert("no".to_string());
+    set.insert("nil".to_string());
+    set.insert("denies".to_string());
+    set.insert("not".to_string());
+    set.insert("exclude".to_string());
+    set.insert("excluded".to_string());
+    set.insert("screen".to_string());
+    set.insert("screening".to_string());
+    set.insert("normal".to_string());
+    set
+});
 
 
 pub struct SentenceMapper {
@@ -13,15 +32,19 @@ pub struct SentenceMapper {
 
 
 impl SentenceMapper {
+
     pub fn new(mapper: DefaultHpoMapper) -> Self {
         SentenceMapper{
             hpo_mapper: mapper
         }
     }  
 
+   
+
     pub fn map_sentence(&self, tokens: &[SimpleToken]) -> Vec<MinedTerm> {
         let mut candidates: HashMap<usize, Vec<MinedTerm>> = HashMap::new();
         let max_partition_heuristic = min(10, tokens.len());
+        let is_excluded = self.has_negation(tokens);
         for i in 1..=max_partition_heuristic {
             let partition = Partition::new(tokens.to_vec(), i);
             for chunk in partition.get_chunks() {
@@ -36,7 +59,6 @@ impl SentenceMapper {
                 match self.hpo_mapper.get_match(string_chunks) {
                     Some(hpo_match) => {
                         let hpo_id = hpo_match.get_term_id();
-                        let observed = true; // TODO -- decorator
                         let start_chunk = chunk.get(0);
                         let end_chunk = chunk.get(chunk.len() - 1);
                         if start_chunk.is_none() || end_chunk.is_none() {
@@ -49,7 +71,7 @@ impl SentenceMapper {
                                         startpos,
                                         endpos,
                                         "matching",
-                                        observed);
+                                        !is_excluded);
                         //// insert a default value (empty vector) if the key is not present, then add the concept to the list
                         candidates.entry(startpos).or_insert(Vec::new()).push(mapped_sentence_part);
                     },
@@ -87,6 +109,9 @@ impl SentenceMapper {
         mapped_sentence_part_list
     }
 
+    fn has_negation(&self,  tokens: &[SimpleToken]) -> bool {
+        tokens.iter().any(|token| NEGATION_CLUES.contains(&token.get_lc_original_token()))
+    }
 
 }
 

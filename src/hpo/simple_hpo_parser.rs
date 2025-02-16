@@ -1,10 +1,22 @@
-
+//! # SimpleHpoParser Module
+//!
+//! This module defines the `SimpleHpoParser` struct, which parses the hp.json file using serde
+//! For speed and simplicity, we do not parse in all of the data but instead leverage user-defined functions
+//! to extract the required information.
+//!
+//! ## Example
+//!
+//! ```no_run
+//! use ontolius::prelude::TermId;
+//! use ferriphene::hpo::clinical_mapper::ClinicalMapper;
+//! let simple_parser = SimpleHpoParser::new("/path/to/hp.json");
+//! let t2tmap: HashMap<String, TermId> = simple_parser.get_text_to_term_map();
+//! let mut clinical_mapper = ClinicalMapper::from_map(&t2tmap);
+//! ```
 
 
 use ontolius::prelude::TermId;
-use serde::Deserialize;
 use std::{collections::{HashMap, HashSet}, fs, path::PathBuf, str::FromStr};
-
 use crate::fenominal_traits::TermIdToTextMapper;
 
 /// Transform a URI such as "http://purl.obolibrary.org/obo/HP_6000699" into a CURIE HP:6000699
@@ -73,13 +85,15 @@ impl std::fmt::Debug for HpEdge {
 struct SimpleOntology {
     nodes: Vec<HpNode>,
     edges: Vec<HpEdge>,
+    version: String
 }
 
 impl SimpleOntology {
-    pub fn new(e: Vec<HpEdge>, n: Vec<HpNode>) -> Self {
+    pub fn new<T: Into<String>>(e: Vec<HpEdge>, n: Vec<HpNode>, ver: T) -> Self {
         SimpleOntology {
             nodes: n,
-            edges: e
+            edges: e,
+            version: ver.into()
         }
     }
 }
@@ -92,6 +106,7 @@ pub struct SimpleHpoParser {
 }
 
 impl SimpleHpoParser {
+    /// Creates a new SimpleHpoParser the specified path to the hp.json file
     pub fn new(hp_json_path: &str) -> Result<SimpleHpoParser, String> {
         let sonto = get_ontology(hp_json_path)?;
         Ok(SimpleHpoParser {
@@ -102,7 +117,7 @@ impl SimpleHpoParser {
 
 
 impl TermIdToTextMapper for SimpleHpoParser {
-
+    /// Crreates a map with keys being all lower-case HPO term labels and synonyms and values being the corresponding TermIds.
     fn get_text_to_term_map(&self) -> HashMap<String, TermId> {
         let mymap = build_graph(&self.simple_ontology);
         let minimum_synonym_length = 4;
@@ -111,7 +126,6 @@ impl TermIdToTextMapper for SimpleHpoParser {
         let mut text_to_tid_map = HashMap::new();
         // These are commmon false-positive results related to HPO synonyms that occur in other contexts
         let omittable_labels: HashSet<String> = ["negative".to_string(), "weakness".to_string()].iter().cloned().collect();
-        let min_synonym_length = 4;
         for hp_node in &self.simple_ontology.nodes {
             let term_id_string = &hp_node.term_id;
             if pheno_subontology_tid_set.contains(term_id_string) {
@@ -131,7 +145,6 @@ impl TermIdToTextMapper for SimpleHpoParser {
                     }
                     text_to_tid_map.insert(syno.to_ascii_lowercase(), tid.clone());
                 }
-
             }
         }
         text_to_tid_map
@@ -139,42 +152,10 @@ impl TermIdToTextMapper for SimpleHpoParser {
 
 }
 
-/*
-impl Ontology {
-    pub fn new(hp_json_path: &str) -> Self {
-        let data = fs::read_to_string(hp_json_path).expect("Unable to read file");
-        let json: serde_json::Value =
-        serde_json::from_str(&data).expect("JSON was not well-formatted");
-    if let Some(graphs) = json["graphs"].as_array() {
-        let n = graphs.len();
-        println!("number of graphs {}", n);
-        let graph = graphs.first().expect("Could not find HPO graph");
-       
-        let mut edge_array:Vec<HpEdge> = Vec::new();
-        if let Some(edges) = graph["edges"].as_array() {
-            for edge in edges {
-                let s = edge["sub"].as_str().expect("edge did not have sub");
-                let d = edge["obj"].as_str().expect("edge did not have obj");
-                edge_array.push(HpEdge::new(s.to_string(),d.to_string()));
-            }
-            let n_edges = edges.len();
-            println!("edges {}", n_edges);
-        }
-        for e in edge_array.iter() {
-            println!("{:?}", e);
-        } 
-        if let Some(nodes) = graph["nodes"].as_array() {
-            for node in nodes {
-                println!("{:?}", node)
-            }
-        }      
-        }
-    }
-}
 
-
-*/
-
+/// Create a HashMap that represents the is-a graph of the HPO
+/// 
+/// The key of the grap is a parent, and the value is a vector of children term ids (represented as Strings)
 fn build_graph(ontology: &SimpleOntology) -> HashMap<String, Vec<String>> {
     let mut graph: HashMap<String, Vec<String>> = HashMap::new();
 
@@ -246,15 +227,12 @@ fn get_ontology(hp_json_path: &str) -> Result<SimpleOntology, String> {
     let mut edge_array:Vec<HpEdge> = Vec::new();
     let mut node_array: Vec<HpNode> = Vec::new();
     let hp_json_path = PathBuf::from(hp_json_path);
-    //let data = fs::read_to_string(hp_json_path).expect(format!("Unable to read file at '{}'.", hp_json_path));
     let data = fs::read_to_string(&hp_json_path)
         .unwrap_or_else(|_| panic!("Unable to read file at '{}'.", hp_json_path.display()));
-    
     let json: serde_json::Value =
         serde_json::from_str(&data).expect("JSON was not well-formatted");
     if let Some(graphs) = json["graphs"].as_array() {
         let n = graphs.len();
-        println!("number of graphs {}", n);
         let graph = graphs.first().expect("Could not find HPO graph");
         let version = get_version(&graph);
         println!("version: {}", version);
@@ -280,9 +258,9 @@ fn get_ontology(hp_json_path: &str) -> Result<SimpleOntology, String> {
             let n_nodes = node_array.len();
             println!("nodes {}", n_nodes);
         }
+       return Ok(SimpleOntology::new(edge_array, node_array, version));
     }
-    Ok(SimpleOntology::new(edge_array, node_array))
- 
+   Err(format!("Could not create ontology from '{}'", hp_json_path.display()))
 }
 
 #[cfg(test)]
@@ -296,24 +274,6 @@ mod test {
         let uri = "http://purl.obolibrary.org/obo/HP_6000699";
         let curie = get_hp_id(uri);
         assert_eq!("HP:6000699", curie);
-    }
-
-    #[test]
-    fn test_ontology() {
-        let hp_json = "/Users/robin/data/hpo/hp.json";
-        let sonto = get_ontology(hp_json);
-        assert!(sonto.is_ok());
-        let sonto = sonto.unwrap();
-        let mymap = build_graph(&sonto);
-        let pheno_abn = "HP:0000118";
-        let pheno_subontology_tid_set = get_descendants(&mymap, pheno_abn);
-        println!("N terms {}", pheno_subontology_tid_set.len());
-    }
-
-
-    #[test]
-    fn test_node() {
-       assert_eq!(1,1)
     }
 
 
