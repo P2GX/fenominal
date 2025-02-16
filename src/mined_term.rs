@@ -58,6 +58,6 @@ impl MinedTerm {
 
 impl std::fmt::Display for MinedTerm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "MinedTerm(id: {}, start: {}  end: {})", self.term_id, self.start_pos, self.end_pos)
+        write!(f, "MinedTerm(id: {} [{}-{}])", self.term_id, self.start_pos, self.end_pos)
     }
 }

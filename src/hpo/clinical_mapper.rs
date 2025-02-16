@@ -1,4 +1,6 @@
-use ontolius::ontology::csr::{CsrOntology, MinimalCsrOntology};
+use std::collections::HashMap;
+
+use ontolius::{base::TermId, ontology::csr::{CsrOntology, MinimalCsrOntology}};
 
 use crate::{core_document::CoreDocument, mined_term::MinedTerm};
 
@@ -21,6 +23,15 @@ impl ClinicalMapper {
         ClinicalMapper{
             sentence_matcher: smatcher
         }
+    }
+
+    pub fn from_map(text_to_tid_map: &HashMap<String, TermId>) -> Self {
+        let default_hpo_mapper = DefaultHpoMapper::from_map(text_to_tid_map);
+        let smatcher = SentenceMapper::new(default_hpo_mapper);
+        ClinicalMapper{
+            sentence_matcher: smatcher
+        }
+
     }
 
     pub fn map_text(&mut self, text: &str) -> Vec<MinedTerm> {

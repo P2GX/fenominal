@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use ontolius::ontology::csr::{CsrOntology, MinimalCsrOntology};
+use ontolius::{base::TermId, ontology::csr::{CsrOntology, MinimalCsrOntology}};
 
 use crate::fenominal_traits::{HpoMatcher, TermIdToTextMapper};
 
@@ -17,15 +17,32 @@ pub struct DefaultHpoMapper {
 
 
 impl DefaultHpoMapper {
+    ///  The HPO term with the longest label has 14 words. This will need to be updated if we introduce a term 
+    /// with a longer label in the future.
+    pub const MAX_HPO_TERM_TOKEN_COUNT: usize = 14;
+
 
     pub fn new(hpo: MinimalCsrOntology) -> Self {
         let loader = HpoLoader::from_ontology(hpo);
         let text_to_term_map = loader.get_text_to_term_map();
+        DefaultHpoMapper::from_map(&text_to_term_map)
+    }
+
+    /// Create an HpoMapper from text_to_tid_map
+    /// 
+    /// # Arguments
+    ///
+    /// * `text_to_tid_map` - A map whose keys are lower case HPO labels and synonyms, and who values are the corresponding TermIds.
+    ///
+    /// # Returns
+    ///
+    /// An HpoMapper object that is ready to use for text mining.
+    pub fn from_map(text_to_tid_map: &HashMap<String, TermId>) -> Self {
         let mut wc_map: HashMap<usize, HpoConceptMapper> = HashMap::new();
-        for i in 1..=14 {
+        for i in 1..=DefaultHpoMapper::MAX_HPO_TERM_TOKEN_COUNT {
             wc_map.insert(i, HpoConceptMapper::new(i));
         }
-        for (key, value) in &text_to_term_map {
+        for (key, value) in text_to_tid_map {
             let concept = HpoConcept::new(key, value.clone());
             let n_tokens = concept.word_count();
             if n_tokens > 14 {
@@ -40,9 +57,17 @@ impl DefaultHpoMapper {
         }
     }
 
-
+    /// Search for an HPO term that matches an input string
+    /// 
+    /// # Arguments
+    ///
+    /// * `tokens` - A listt of tokens (words) representing the input string
+    ///
+    /// # Returns
+    ///
+    /// An HpoConceptHit or None
     pub fn get_match(&self, tokens: Vec<String>) -> Option<HpoConceptHit> {
-        if tokens.len() > 14 {
+        if tokens.len() > DefaultHpoMapper::MAX_HPO_TERM_TOKEN_COUNT {
             println!("Malformed input vector: {:?}", tokens);
             return None;
         } else if tokens.is_empty() {

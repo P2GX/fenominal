@@ -1,7 +1,7 @@
 
 
 mod core_document;
-mod fenominal_traits;
+pub mod fenominal_traits;
 pub mod hpo;
 mod mined_term;
 mod simple_sentence;

@@ -6,3 +6,4 @@ pub mod hpo_concept_mapper;
 mod hpo_loader;
 mod partition;
 mod sentence_mapper;
+pub mod simple_hpo_parser;
