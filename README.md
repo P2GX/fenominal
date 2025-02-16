@@ -12,4 +12,4 @@ The other term is not captured because synonyms are not yet implemented by Ontol
 ```shell
  cargo run --bin fenominal_main  -- --hp /path/hp.json --input "intellectual disability (IQ 65), macrocephaly and dysmorphisms"
 ```
-
+This will show the identified HPO terms and also will return a JSON string that could be adapted for use in a front end.

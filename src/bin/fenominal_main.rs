@@ -37,6 +37,9 @@ fn main() {
             for m in matching {
                 println!("{}", m);
             }
+            println!("The equivalent with JSON ");
+            let json_string = clmap.map_text_to_json(&input_string);
+            print!("{}", json_string);
         },
         _ => println!("Could not initialize clinical mapper")
     }
