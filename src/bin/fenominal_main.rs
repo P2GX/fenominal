@@ -26,7 +26,7 @@ fn main() {
     let hp_json_path_str: &str = hp_json_path.to_str().expect("Invalid UTF-8 in path");
     let input_string = args.input;
     println!("Input string: {}", input_string);
-    let use_ontolius = false;
+    let use_ontolius = true;
     let clin_mapper = match use_ontolius {
         true => get_clinical_matcher_ontolius(hp_json_path_str),
         false => get_clinical_matcher_simple(hp_json_path_str)

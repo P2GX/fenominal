@@ -8,17 +8,21 @@ mod simple_sentence;
 mod simple_token;
 mod stopwords;
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+use std::collections::HashMap;
+
+use ontolius::{base::TermId, io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology};
+use crate::hpo::hpo_loader::HpoLoader;
+
+pub fn load_hpo(hp_json_path: &str) -> Result<MinimalCsrOntology, String> {
+    let loader = OntologyLoaderBuilder::new()
+        .obographs_parser()
+        .build();
+
+    let hpo: MinimalCsrOntology = loader.load_from_path(hp_json_path)
+        .expect("HPO could not be loaded");
+    Ok(hpo)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub fn get_text_to_term_map(hpo: MinimalCsrOntology) -> HashMap<String, TermId> {
+    return hpo::hpo_loader::get_text_to_hpo_term_map(&hpo);
 }

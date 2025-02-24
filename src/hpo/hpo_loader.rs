@@ -32,10 +32,45 @@ impl HpoLoader {
             hpo: hp
         }
     }
-
-   
-    
 }
+
+
+
+pub fn get_text_to_hpo_term_map(hpo: &MinimalCsrOntology)-> HashMap<String, TermId> {
+    let mut test_to_tid_map = HashMap::new();
+    // These are commmon false-positive results related to HPO synonyms that occur in other contexts
+    let omittable_labels: HashSet<String> = ["negative", "weakness"]
+                        .iter()
+                        .map(|s| s.to_ascii_lowercase())
+                        .collect();
+    let min_synonym_length = 4;
+
+    let PHENOTYPIC_ABNORMALITY: TermId = ("HP", "0000118").into();
+    let idx = hpo.id_to_idx(&PHENOTYPIC_ABNORMALITY)
+        .expect("Phenotypic abnormality not found in HPO");
+    let hierarchy = hpo.hierarchy();
+    let pheno_abn_terms: Vec<_> = hierarchy.iter_descendants_of(idx)
+                    .flat_map(|tidx| hpo.idx_to_term(tidx))
+                    .collect();
+    for term in pheno_abn_terms {
+        let term_id = term.identifier();
+        let term_label_lc = term.name().to_ascii_lowercase();
+        if omittable_labels.contains(&term_label_lc) || term_label_lc.len() < min_synonym_length {
+            continue;
+        }
+        test_to_tid_map.insert(term_label_lc, term_id.clone());
+        // TODO: Add parsing of synonyms -- need Ontolius upstream!
+        // Remember not to add if length is less than min_synonym_length
+        // Remember to skip the omittable_labels
+
+    }
+        
+    
+
+    test_to_tid_map
+}
+
+
 
 impl TermIdToTextMapper for HpoLoader {
     fn get_text_to_term_map(&self) -> HashMap<String, TermId> {
