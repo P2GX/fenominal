@@ -41,16 +41,14 @@ impl SentenceMapper {
 
    
 
-    pub fn map_sentence(&self, tokens: &[SimpleToken]) -> Vec<MinedTerm> {
+    pub fn map_sentence(&self, tokens: &[SimpleToken]) -> Result<Vec<MinedTerm>, String> {
         let mut candidates: HashMap<usize, Vec<MinedTerm>> = HashMap::new();
         let max_partition_heuristic = min(10, tokens.len());
         let is_excluded = self.has_negation(tokens);
         for i in 1..=max_partition_heuristic {
-            let partition = Partition::new(tokens.to_vec(), i);
-            for chunk in partition.get_chunks() {
-                if chunk.len() < i {
-                    continue; // last portion is smaller, we will get it in corresponding loop (i is current chunk size)
-                }
+            let partition = Partition::new(&tokens, i);
+            for j in 0..partition.count() {
+                let chunk = partition.get(j).ok_or_else(|| format!("Error: Could not retrieve chunk at index {}", j))?;
                 let string_chunks: Vec<String> = chunk
                     .iter()
                     .map(|stoken| stoken.get_original_token())
@@ -106,7 +104,7 @@ impl SentenceMapper {
                 }
             }  
         }
-        mapped_sentence_part_list
+        Ok(mapped_sentence_part_list)
     }
 
     fn has_negation(&self,  tokens: &[SimpleToken]) -> bool {

@@ -7,10 +7,10 @@
 //! 
 //! ## Example
 //!
-//! ```no_run
+//! ```ignore
 //! let mined_term_list = clinical_mappper.map_text(&input_string); 
 //! for mt in mined_term_list {
-//!     println!("{}", mt)}
+//!     println!("{}", mt);
 //! }
 //! ```
 use std::str::FromStr;

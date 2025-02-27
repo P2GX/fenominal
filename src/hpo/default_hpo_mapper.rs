@@ -4,7 +4,7 @@ use ontolius::{base::TermId, ontology::csr::{CsrOntology, MinimalCsrOntology}};
 
 use crate::fenominal_traits::{HpoMatcher, TermIdToTextMapper};
 
-use super::{hpo_concept::HpoConcept, hpo_concept_hit::HpoConceptHit, hpo_concept_mapper::HpoConceptMapper, hpo_loader::HpoLoader};
+use super::{hpo_concept::HpoConcept, hpo_concept_hit::HpoConceptHit, hpo_concept_mapper::HpoConceptMapper, hpo_loader::{get_text_to_hpo_term_map, HpoLoader}};
 
 
 
@@ -22,9 +22,8 @@ impl DefaultHpoMapper {
     pub const MAX_HPO_TERM_TOKEN_COUNT: usize = 14;
 
 
-    pub fn new(hpo: MinimalCsrOntology) -> Self {
-        let loader = HpoLoader::from_ontology(hpo);
-        let text_to_term_map = loader.get_text_to_term_map();
+    pub fn new(hpo: &MinimalCsrOntology) -> Self {
+        let text_to_term_map = get_text_to_hpo_term_map(hpo);
         DefaultHpoMapper::from_map(&text_to_term_map)
     }
 

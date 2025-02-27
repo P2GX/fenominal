@@ -1,50 +1,54 @@
-use std::{cmp::min, vec::Vec};
+//! This module implements a function to partition a list into sublists of a determined size.
+//! 
+//! In the following example, we extract three partitions [1,2,3], [4,5,6], and [7,8,9]
+//! The final number 10 is ignored because we only want partitions of exactly the indicated size
+//! The sentence mapper tries partiotions of sizes 1 to 14 to match HPO terms, and thus
+//! the smaller "fragments" of any given partition will already have been tested
+//! 
+//! This is a private module.
+//! 
+//! # Examples
+//! ```ignore
+//! let list = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+//! let partition = Partition::new(&list, 3);
+//! for i in 0..partition.size() {
+//!     let part = partition.get(i); // first parition will be an option 
+//! }
+//! ```
+//! 
 
-pub struct Partition<T> 
-    where T: Clone
-    {
-    chunk_list: Vec<Vec<T>>,
+
+pub struct Partition<'a, T> {
+    original_list: &'a [T],
     chunk_size: usize,
 }
 
-impl<T> Partition<T>
-    where T: Clone {
-    
-    pub fn new(token_list: Vec<T>, chunk_size: usize) -> Self {
-        let mut chunks: Vec<Vec<T>> = Vec::new();
-        let n_chunks =    (token_list.len() as f64 / chunk_size as f64).ceil() as usize;
-        for i in 0..=n_chunks {
-            let end = min(token_list.len(), i * chunk_size + chunk_size);
-            chunks.push(token_list[i..end].to_vec());
+impl<'a, T> Partition<'a, T> {
+    pub fn new(original: &'a [T], chunk_size: usize) -> Self {    
+        Self {
+            original_list: original,
+            chunk_size: chunk_size,
         }
-        Partition {
-            chunk_list: chunks,
-            chunk_size,
-        }
-    }
-
-    // Static method to create a Partition
-    pub fn of_size(list: Vec<T>, chunk_size: usize) -> Self {
-        Partition::new(list, chunk_size)
     }
 
     // Get the chunk at a given index
-    pub fn get(&self, index: usize) -> Option<Vec<T>> {
-        if index > self.chunk_list.len() {
-            None // Index out of bounds
-        } else {
-            Some(self.chunk_list[index].to_vec()) // Return the sublist as a Vec
-        }
+    pub fn get(&self, index: usize) -> Option<&'a [T]> {
+       let start = index * self.chunk_size;
+       if start > self.original_list.len() {
+            return None;
+       }
+       let end = start + self.chunk_size;
+       if end > self.original_list.len() {
+        return None; // We do not want chunks that are smaller than chunk size
+       }
+       Some(&self.original_list[start..end])
     }
 
-    /// Calculate the number of partitions of the list, equivalent to ceiling(list.size()/chunkSize)
+    /// Calculate the number of partitions of the list, equivalent to floor(list.size()/chunkSize)
     pub fn count(&self) -> usize {
-        (self.chunk_list.len() + self.chunk_size - 1) / self.chunk_size 
+        self.original_list.len() / self.chunk_size 
     }
 
-    pub fn get_chunks(&self) -> &Vec<Vec<T>> {
-        &self.chunk_list
-    }
 }
 
 
@@ -58,8 +62,8 @@ mod test {
     #[test]
     fn test_integer_partition() {
         let list = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        let partition = Partition::of_size(list, 3);
-        assert_eq!(4, partition.count());
+        let partition = Partition::new(&list, 3);
+        assert_eq!(3, partition.count());
         let p1 = partition.get(0);
         assert!(p1.is_some());
         let p1 = p1.unwrap();

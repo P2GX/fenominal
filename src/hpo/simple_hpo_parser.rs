@@ -6,9 +6,12 @@
 //!
 //! ## Example
 //!
-//! ```no_run
+//! ```ignore
 //! use ontolius::prelude::TermId;
+//! use std::collections::HashMap;
 //! use ferriphene::hpo::clinical_mapper::ClinicalMapper;
+//! use ferriphene::hpo::simple_hpo_parser::SimpleHpoParser;
+//! use ferriphene::fenominal_traits::TermIdToTextMapper;
 //! let simple_parser = SimpleHpoParser::new("/path/to/hp.json");
 //! let t2tmap: HashMap<String, TermId> = simple_parser.get_text_to_term_map();
 //! let mut clinical_mapper = ClinicalMapper::from_map(&t2tmap);

@@ -7,6 +7,7 @@ use crate::{mined_term::MinedTerm, simple_sentence::SimpleSentence};
 use crate::{hpo::hpo_concept_hit::HpoConceptHit};
 use crate::{hpo::hpo_concept::HpoConcept};
 
+
 /// A trait that is implemented by code that identify `MinedTerm` instances from an input sentence
 pub trait SentenceMapper {
     /// Identify `MinedTerm` instances from an input sentence
@@ -15,8 +16,9 @@ pub trait SentenceMapper {
     /// and other information.
     /// # Example
     ///
-    /// ```no_run
-    /// // text is the input text, e.g., a clinical vignette
+    /// ```ignore
+    /// use crate::core_document;
+    /// let text = "Individual A had arachnodactyly and scoliosis."
     /// let core_document = CoreDocument::new(text); 
     /// let sentences = core_document.get_sentences();
     /// let mut mapped_parts: Vec<MinedTerm> = Vec::new();
@@ -47,8 +49,8 @@ pub trait HpoMatcher  {
     ///
     /// # Example
     ///
-    /// ```no_run
-    /// let tokens: Vec<String> = ...; // these are the words of the input string
+    /// ```ignore
+    /// let tokens: Vec<String> = vec!["Individual", "A", "had", "arachnodactyly", "and", "scoliosis."]; 
     /// let vec_of_str_refs: Vec<&str> = tokens.iter().map(|s| s.as_str()).collect();
     /// let slice: &[&str] = &vec_of_str_refs;
     /// let matcher = self.wordcount_to_matcher.get(&tokens.len())?; 

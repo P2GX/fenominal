@@ -9,7 +9,7 @@
 //! file:///Users/robin/GIT/ferriphene/target/doc/ferriphene/hpo/simple_hpo_parser/index.html
 //! ## Example
 //!
-//! ```no_run
+//! ```ignore
 //! let mined_term_list = clinical_mappper.map_text(&input_string); 
 //! for mt in mined_term_list {
 //!     println!("{}", mt)}
@@ -31,13 +31,16 @@ pub struct ClinicalMapper {
 
 impl ClinicalMapper {
 
-    pub fn new(hpo: MinimalCsrOntology) -> Self {
+    pub fn new(hpo: &MinimalCsrOntology) -> Self {
         let default_hpo_mapper = DefaultHpoMapper::new(hpo);
         let smatcher = SentenceMapper::new(default_hpo_mapper);
         ClinicalMapper{
             sentence_matcher: smatcher
         }
     }
+
+
+
 
     pub fn from_map(text_to_tid_map: &HashMap<String, TermId>) -> Self {
         let default_hpo_mapper = DefaultHpoMapper::from_map(text_to_tid_map);
@@ -48,13 +51,16 @@ impl ClinicalMapper {
 
     }
 
-    pub fn map_text(&mut self, text: &str) -> Vec<MinedTerm> {
+    pub fn map_text(&self, text: &str) -> Vec<MinedTerm> {
         let core_document = CoreDocument::new(text);
         let sentences = core_document.get_sentences();
         let mut mapped_parts: Vec<MinedTerm> = Vec::new();
         for ss in sentences {
-            let sentence_parts = self.sentence_matcher.map_sentence(ss.get_tokens());
-            mapped_parts.extend(sentence_parts);
+            match self.sentence_matcher.map_sentence(ss.get_tokens()) {
+                Ok(sentence_parts) => mapped_parts.extend(sentence_parts),
+                Err(e) => println!("Could not map: {}", e.to_ascii_lowercase())
+            }
+            
         }
         mapped_parts
     }

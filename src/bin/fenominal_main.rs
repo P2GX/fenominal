@@ -6,6 +6,8 @@ use std::path::PathBuf;
 use ferriphene::hpo::clinical_mapper::ClinicalMapper;
 use ferriphene::hpo::simple_hpo_parser::SimpleHpoParser;
 use ferriphene::fenominal_traits::TermIdToTextMapper;
+use std::sync::Arc;
+
 
 #[derive(Parser, Debug)]
 #[command(version = "1.0", about = "A simple CLI test program")]
@@ -53,7 +55,7 @@ fn main() {
 fn get_clinical_matcher_simple(hp_json_path: &str) -> Result<ClinicalMapper, String> {
     let simple_mapper = SimpleHpoParser::new(hp_json_path)?;
     let t2tmap: HashMap<String, TermId> = simple_mapper.get_text_to_term_map();
-    let mut clinical_mapper = ClinicalMapper::from_map(&t2tmap);
+    let clinical_mapper = ClinicalMapper::from_map(&t2tmap);
     Ok(clinical_mapper)
 }
 
@@ -65,7 +67,9 @@ fn get_clinical_matcher_ontolius(hp_json_path: &str) -> Result<ClinicalMapper, S
     println!("Processing file: {:?}", hp_json_path);
     let hpo: MinimalCsrOntology = loader.load_from_path(hp_json_path)
                         .expect("HPO could not be loaded");
+   // let shared_data = Arc::new(hpo);
+   // let data_clone = Arc::clone(&shared_data);
     
-    let mut clinical_mapper = ClinicalMapper::new(hpo);
+    let clinical_mapper = ClinicalMapper::new(&hpo);
     Ok(clinical_mapper)
 }
