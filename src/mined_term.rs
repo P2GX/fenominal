@@ -13,11 +13,9 @@
 //!     println!("{}", mt);
 //! }
 //! ```
-use std::str::FromStr;
 
 use ontolius::base::TermId;
 use serde::{Serialize, Deserialize};
-use serde_json::Serializer;
 use crate::simple_token::SimpleToken;
 
 
@@ -79,10 +77,8 @@ mod test {
 
     #[test]
     fn test_ctor() {
-        let term_id: Result<TermId, _> = TermId::from_str("HP:0001250");
-        let term_id = term_id.unwrap();
-        let s = term_id.to_string();
-        println!("{}", s)
+        let term_id: TermId = ("HP", "0001250").into();
+        assert_eq!("HP:0001250", term_id.to_string());
     }
 
 

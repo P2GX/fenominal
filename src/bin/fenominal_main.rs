@@ -6,7 +6,6 @@ use std::path::PathBuf;
 use ferriphene::hpo::clinical_mapper::ClinicalMapper;
 use ferriphene::hpo::simple_hpo_parser::SimpleHpoParser;
 use ferriphene::fenominal_traits::TermIdToTextMapper;
-use std::sync::Arc;
 
 
 #[derive(Parser, Debug)]
@@ -34,7 +33,7 @@ fn main() {
         false => get_clinical_matcher_simple(hp_json_path_str)
     };
     match clin_mapper {
-        Ok(mut clmap) => {
+        Ok(clmap) => {
             let matching = clmap.map_text(&input_string);
             for m in matching {
                 println!("{}", m);

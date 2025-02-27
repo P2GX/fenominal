@@ -65,7 +65,7 @@ impl ClinicalMapper {
         mapped_parts
     }
 
-    pub fn map_text_to_json(&mut self, text: &str) -> String {
+    pub fn map_text_to_json(&self, text: &str) -> String {
         let mined_terms = self.map_text(text);
         serde_json::to_string(&mined_terms).expect("Failed to serialize mined terms")
     }
