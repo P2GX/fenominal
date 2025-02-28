@@ -15,16 +15,16 @@
 //! ```
 
 use ontolius::base::TermId;
-use serde::{Serialize, Deserialize};
+
 use crate::simple_token::SimpleToken;
 
 
 
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone)]
 pub struct MinedTerm {
     tokens: Vec<SimpleToken>,
-    term_id: String,
+    term_id: TermId,
     start_pos: usize,
     end_pos: usize,
     matching_string: String,
@@ -43,7 +43,7 @@ impl MinedTerm {
                 observed: bool) -> Self {
             MinedTerm {
                 tokens: tokens,
-                term_id: tid.to_string(),
+                term_id: tid,
                 start_pos: start,
                 end_pos: end,
                 matching_string: matching.into(),
@@ -59,12 +59,22 @@ impl MinedTerm {
     pub fn get_end_pos(&self) -> usize {
         self.end_pos
     }
+
+    pub fn get_term_id(&self) -> TermId {
+        self.term_id.clone()
+    }
+
+    pub fn is_observed(&self) -> bool {
+        self.is_observed
+    }
+
+
 }
 
 
 impl std::fmt::Display for MinedTerm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "MinedTerm(id: {} [{}-{}]-observed {})", self.term_id, self.start_pos, self.end_pos, self.is_observed)
+        write!(f, "MinedTerm(id: {} [{}-{}]-observed {})", self.term_id.to_string(), self.start_pos, self.end_pos, self.is_observed)
     }
 }
 
