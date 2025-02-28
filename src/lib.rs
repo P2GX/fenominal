@@ -1,17 +1,19 @@
 
 
 mod core_document;
-pub mod fenominal_traits;
-pub mod hpo;
+mod fenominal_traits;
+mod hpo;
 mod mined_term;
 mod simple_sentence;
 mod simple_token;
 mod stopwords;
+pub mod fenominal;
+
 
 use std::collections::HashMap;
 
 use ontolius::{base::TermId, io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology};
-use crate::hpo::hpo_loader::HpoLoader;
+
 
 pub fn load_hpo(hp_json_path: &str) -> Result<MinimalCsrOntology, String> {
     let loader = OntologyLoaderBuilder::new()

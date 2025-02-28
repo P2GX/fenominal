@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use ontolius::{base::TermId, ontology::csr::{CsrOntology, MinimalCsrOntology}};
+use ontolius::{base::TermId, ontology::csr::MinimalCsrOntology};
 
-use crate::fenominal_traits::{HpoMatcher, TermIdToTextMapper};
+use crate::fenominal_traits::HpoMatcher;
 
 use super::{hpo_concept::HpoConcept, hpo_concept_hit::HpoConceptHit, hpo_concept_mapper::HpoConceptMapper, hpo_loader::{get_text_to_hpo_term_map, HpoLoader}};
 

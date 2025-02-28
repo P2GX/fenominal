@@ -16,7 +16,7 @@ pub struct HpoConceptMapper {
 
 impl HpoConceptMapper {
     pub fn new(n: usize) -> Self {
-        let mut map: HashMap<String, Vec<HpoConcept>> = HashMap::new();
+        let map: HashMap<String, Vec<HpoConcept>> = HashMap::new();
         HpoConceptMapper {
             n_words: n,
             component_token_to_concept_map: map,

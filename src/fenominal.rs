@@ -1,15 +1,25 @@
+//! This module is the main entry point.
+//! 
+//! There are two public functions. One gets a vector of FenominalHit object, and then other gets the corresponding JSON
+//! 
+//! # Examples
+//! ```ignore
+//! let hp_json_path = "/some/path/hp.json";
+//! let input_string = 'Intellectual disability, macrocephaly, scoliosis'`;
+//! let fenominal = Fenominal::new(hp_json_path_str);
+//! let json = fenominal.map_text_to_json(&input_string);
+//! ```
+//! 
+
 use ontolius::{io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology, prelude::{MinimalTerm, TermAware}};
-use serde::{Serialize, Deserialize};
-use crate::mined_term::{self, MinedTerm};
+use serde::Serialize;
+use crate::mined_term::MinedTerm;
 
-use super::clinical_mapper::ClinicalMapper;
-
-
-
+use crate::hpo::clinical_mapper::ClinicalMapper;
 
 
 #[derive(Serialize)]
-struct FenominalHit {
+pub struct FenominalHit {
     term_id: String,
     term_label: String,
     start_pos: usize, 

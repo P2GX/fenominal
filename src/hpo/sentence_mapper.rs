@@ -88,7 +88,7 @@ impl SentenceMapper {
             if i < current_span {
                 continue;
             }
-            let mut candidates_at_pos_i = candidates.get(&i);
+            let candidates_at_pos_i = candidates.get(&i);
             if candidates_at_pos_i.is_some() {
                 let candidates_at_pos_i = candidates_at_pos_i.unwrap();
                 let longest_match = candidates_at_pos_i

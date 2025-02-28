@@ -1,11 +1,11 @@
-use std::{collections::HashMap, iter::Map};
+use std::collections::HashMap;
 
 use ontolius::base::TermId;
 
 use crate::simple_token::SimpleToken;
 use crate::{mined_term::MinedTerm, simple_sentence::SimpleSentence};
-use crate::{hpo::hpo_concept_hit::HpoConceptHit};
-use crate::{hpo::hpo_concept::HpoConcept};
+use crate::hpo::hpo_concept_hit::HpoConceptHit;
+use crate::hpo::hpo_concept::HpoConcept;
 
 
 /// A trait that is implemented by code that identify `MinedTerm` instances from an input sentence

@@ -1,7 +1,7 @@
 
-use std::{collections::{HashMap, HashSet}, iter::Map};
+use std::collections::{HashMap, HashSet};
 
-use ontolius::{base::{Identified, TermId}, io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology, prelude::{AncestorNodes, DescendantNodes, HierarchyAware, MinimalTerm, TermAware}};
+use ontolius::{base::{Identified, TermId}, io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology, prelude::{DescendantNodes, HierarchyAware, MinimalTerm, TermAware}};
 
 use crate::fenominal_traits::TermIdToTextMapper;
 

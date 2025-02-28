@@ -1,5 +1,8 @@
-use std::collections::HashSet;
-
+//! A simple module that tests if a word is a stop word.
+//! 
+//! Stop words are the words that are filtered out (i.e. stopped) before or after processing of 
+//! natural language data (text) because they are deemed insignificant.
+//! 
 
 
 

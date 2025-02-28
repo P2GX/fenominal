@@ -1,14 +1,11 @@
 use clap::Parser;
-use ontolius::base::TermId;
-use ontolius::{io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology};
-use std::collections::HashMap;
 use std::path::PathBuf;
-use ferriphene::hpo::fenominal::{self, Fenominal};
+use ferriphene::fenominal::Fenominal;
 
 
 
 #[derive(Parser, Debug)]
-#[command(version = "1.0", about = "A simple CLI test program")]
+#[command(version = "0.1.6", about = "Fenominal implementation in Rust")]
 struct Args {
    /// Path to the file
    #[arg(long, value_name = "FILE")]
@@ -20,7 +17,6 @@ struct Args {
 }
 
 fn main() {
-    println!("Running test program...");
     let args = Args::parse();
     let hp_json_path = args.hp;
     let hp_json_path_str: &str = hp_json_path.to_str().expect("Invalid UTF-8 in path");

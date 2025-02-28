@@ -75,7 +75,7 @@ mod test {
 
     #[test]
     fn test() {
-        /// Cone-shaped epiphysis of the proximal phalanx of the 3rd finger HP:0009348
+        // Cone-shaped epiphysis of the proximal phalanx of the 3rd finger HP:0009348
         let term_id: TermId = ("HP", "0009348").into();
         let term_label = "Cone-shaped epiphysis of the proximal phalanx of the 3rd finger";
         let hconcept = HpoConcept::new(term_label, term_id);

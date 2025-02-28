@@ -235,7 +235,6 @@ fn get_ontology(hp_json_path: &str) -> Result<SimpleOntology, String> {
     let json: serde_json::Value =
         serde_json::from_str(&data).expect("JSON was not well-formatted");
     if let Some(graphs) = json["graphs"].as_array() {
-        let n = graphs.len();
         let graph = graphs.first().expect("Could not find HPO graph");
         let version = get_version(&graph);
         println!("version: {}", version);
