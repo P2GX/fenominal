@@ -1,6 +1,6 @@
 [package]
 name = "ferriphene"
-version = "0.1.4"
+version = "0.1.5"
 description = "HPO-based text mining. Rust version of fenominal"
 edition = "2021"
 
