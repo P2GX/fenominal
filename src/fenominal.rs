@@ -11,7 +11,9 @@
 //! ```
 //! 
 
-use ontolius::{io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology, prelude::{MinimalTerm, TermAware}};
+use std::collections::HashSet;
+
+use ontolius::{base::TermId, io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology, prelude::{MinimalTerm, TermAware}};
 use serde::Serialize;
 use crate::mined_term::MinedTerm;
 
@@ -58,7 +60,6 @@ impl Fenominal {
         let loader = OntologyLoaderBuilder::new()
             .obographs_parser()
             .build();
-        println!("Processing file: {:?}", hp_json_path);
         let hpo: MinimalCsrOntology = loader.load_from_path(hp_json_path)
                             .expect("HPO could not be loaded");
         let clinical_mapper = ClinicalMapper::new(&hpo);
@@ -101,6 +102,19 @@ impl Fenominal {
             }
         }
         hits
+    }
+
+    /// Map an input text to set of HPO terms
+    /// 
+    /// This method is appropriate for use cases where we want a set of unique terms
+    /// but do not care about their location in the original text
+    pub fn map_text_to_term_id_set(&self, input_text: &str) -> HashSet<TermId> {
+        let mut term_id_set: HashSet<TermId> = HashSet::new();
+        let mined_terms = self.clinical_mapper.map_text(input_text);
+        for mt in mined_terms {
+            term_id_set.insert(mt.get_term_id());
+        }
+        term_id_set
     }
 
 }
