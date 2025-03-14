@@ -1,33 +1,33 @@
 use crate::simple_token::SimpleToken;
-use regex::Regex;
 use once_cell::sync::Lazy;
+use regex::Regex;
 
-static WORD_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"[a-zA-Z]+('-[a-zA-Z]+)?").unwrap()
-});
+static WORD_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"[a-zA-Z]+('-[a-zA-Z]+)?").unwrap());
 
-
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct SimpleSentence {
     sentence: String,
     start_pos: usize,
     end_pos: usize,
-    tokens: Vec<SimpleToken>
+    tokens: Vec<SimpleToken>,
 }
-
-
 
 impl SimpleSentence {
     pub fn new(text: &str, start: usize, end: usize) -> Self {
         let mut stokens = Vec::new();
         for mat in WORD_PATTERN.find_iter(text) {
-            stokens.push(SimpleToken::new(mat.as_str(), mat.as_str(), mat.start(), mat.end()));
+            stokens.push(SimpleToken::new(
+                mat.as_str(),
+                mat.as_str(),
+                mat.start(),
+                mat.end(),
+            ));
         }
         SimpleSentence {
             sentence: text.into(),
             start_pos: start,
             end_pos: end,
-            tokens: stokens
+            tokens: stokens,
         }
     }
 
@@ -48,14 +48,13 @@ impl SimpleSentence {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use std::assert_eq;
 
     use super::*;
 
-    const sentence1: &str= "The quick brown fox jumps over the lazy dog. ";
+    const sentence1: &str = "The quick brown fox jumps over the lazy dog. ";
 
     #[test]
     fn test_equality() {
@@ -69,7 +68,6 @@ mod test {
         let ssentence = SimpleSentence::new(sentence1, 0, 2);
         assert_eq!(9, ssentence.tokens.len());
     }
-
 
     #[test]
     fn test_equality_of_tokens() {
@@ -91,5 +89,4 @@ mod test {
         assert_eq!(106, ssentence.get_start_pos());
         assert_eq!(202, ssentence.get_end_pos());
     }
-
 }

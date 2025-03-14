@@ -1,15 +1,14 @@
-use std::{cmp::min, collections::HashMap, iter::Map};
+use std::{cmp::min, collections::HashMap};
 
 use crate::{hpo::partition::Partition, mined_term::MinedTerm, simple_token::SimpleToken};
 
 use super::default_hpo_mapper::DefaultHpoMapper;
 
-use std::collections::HashSet;
 use once_cell::sync::Lazy;
-
+use std::collections::HashSet;
 
 /// This is a set of words that we use to indentify exclusion (negation) of phenotypic abnormality
-/// 
+///
 /// e.g. "Proband 1 did not have arachnodactyly" would be flagged as negated because of the word "not".
 static NEGATION_CLUES: Lazy<HashSet<String>> = Lazy::new(|| {
     let mut set = HashSet::new();
@@ -25,21 +24,14 @@ static NEGATION_CLUES: Lazy<HashSet<String>> = Lazy::new(|| {
     set
 });
 
-
 pub struct SentenceMapper {
     hpo_mapper: DefaultHpoMapper,
 }
 
-
 impl SentenceMapper {
-
     pub fn new(mapper: DefaultHpoMapper) -> Self {
-        SentenceMapper{
-            hpo_mapper: mapper
-        }
-    }  
-
-   
+        SentenceMapper { hpo_mapper: mapper }
+    }
 
     pub fn map_sentence(&self, tokens: &[SimpleToken]) -> Result<Vec<MinedTerm>, String> {
         let mut candidates: HashMap<usize, Vec<MinedTerm>> = HashMap::new();
@@ -48,7 +40,9 @@ impl SentenceMapper {
         for i in 1..=max_partition_heuristic {
             let partition = Partition::new(&tokens, i);
             for j in 0..partition.count() {
-                let chunk = partition.get(j).ok_or_else(|| format!("Error: Could not retrieve chunk at index {}", j))?;
+                let chunk = partition
+                    .get(j)
+                    .ok_or_else(|| format!("Error: Could not retrieve chunk at index {}", j))?;
                 let string_chunks: Vec<String> = chunk
                     .iter()
                     .map(|stoken| stoken.get_original_token())
@@ -64,15 +58,19 @@ impl SentenceMapper {
                         }
                         let startpos = start_chunk.unwrap().get_start_pos();
                         let endpos = end_chunk.unwrap().get_end_pos();
-                        let mapped_sentence_part = MinedTerm::new(chunk.to_vec(),
-                                        hpo_id,
-                                        startpos,
-                                        endpos,
-                                        "matching",
-                                        !is_excluded);
+                        let mapped_sentence_part = MinedTerm::new(
+                            chunk.to_vec(),
+                            hpo_id,
+                            startpos..endpos,
+                            "matching",
+                            !is_excluded,
+                        );
                         //// insert a default value (empty vector) if the key is not present, then add the concept to the list
-                        candidates.entry(startpos).or_insert(Vec::new()).push(mapped_sentence_part);
-                    },
+                        candidates
+                            .entry(startpos)
+                            .or_insert(Vec::new())
+                            .push(mapped_sentence_part);
+                    }
                     None => {} // do nothing if no match
                 }
             }
@@ -93,23 +91,23 @@ impl SentenceMapper {
                 let candidates_at_pos_i = candidates_at_pos_i.unwrap();
                 let longest_match = candidates_at_pos_i
                     .iter()
-                    .max_by(|a, b| a.get_end_pos().cmp(&b.get_end_pos()));
+                    .max_by(|&a, &b| a.get_span().end.cmp(&b.get_span().end));
                 if longest_match.is_some() {
                     let longest_match = longest_match.unwrap();
-                    current_span = longest_match.get_end_pos();
+                    current_span = longest_match.get_span().end;
                     mapped_sentence_part_list.push(longest_match.clone());
                     // advance to the last position of the current match
                     // note that this is String position convention, and so the next hist could start at
                     // currentSpan, but cannot be less than currentSpan without overlapping.
                 }
-            }  
+            }
         }
         Ok(mapped_sentence_part_list)
     }
 
-    fn has_negation(&self,  tokens: &[SimpleToken]) -> bool {
-        tokens.iter().any(|token| NEGATION_CLUES.contains(&token.get_lc_original_token()))
+    fn has_negation(&self, tokens: &[SimpleToken]) -> bool {
+        tokens
+            .iter()
+            .any(|token| NEGATION_CLUES.contains(&token.get_lc_original_token()))
     }
-
 }
-
