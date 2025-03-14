@@ -18,27 +18,36 @@
 
 use super::{default_hpo_mapper::DefaultHpoMapper, sentence_mapper::SentenceMapper};
 use crate::{core_document::CoreDocument, mined_term::MinedTerm};
-use ontolius::{ontology::csr::MinimalCsrOntology, TermId};
-use std::collections::HashMap;
+use ontolius::{
+    ontology::{HierarchyWalks, OntologyTerms},
+    term::{MinimalTerm, Synonymous},
+    TermId,
+};
 
 pub struct ClinicalMapper {
-    sentence_matcher: SentenceMapper,
+    sentence_mapper: SentenceMapper,
 }
 
 impl ClinicalMapper {
-    pub fn new(hpo: &MinimalCsrOntology) -> Self {
+    pub fn new<O, T>(hpo: &O) -> Self
+    where
+        O: OntologyTerms<T> + HierarchyWalks,
+        T: MinimalTerm + Synonymous,
+    {
         let default_hpo_mapper = DefaultHpoMapper::new(hpo);
-        let smatcher = SentenceMapper::new(default_hpo_mapper);
-        ClinicalMapper {
-            sentence_matcher: smatcher,
+
+        Self {
+            sentence_mapper: SentenceMapper::new(default_hpo_mapper),
         }
     }
 
-    pub fn from_map(text_to_tid_map: &HashMap<String, TermId>) -> Self {
+    pub fn from_map<'a, I>(text_to_tid_map: I) -> Self
+    where
+        I: IntoIterator<Item = (&'a str, &'a TermId)>,
+    {
         let default_hpo_mapper = DefaultHpoMapper::from_map(text_to_tid_map);
-        let smatcher = SentenceMapper::new(default_hpo_mapper);
         ClinicalMapper {
-            sentence_matcher: smatcher,
+            sentence_mapper: SentenceMapper::new(default_hpo_mapper),
         }
     }
 
@@ -47,7 +56,7 @@ impl ClinicalMapper {
         let sentences = core_document.get_sentences();
         let mut mapped_parts: Vec<MinedTerm> = Vec::new();
         for ss in sentences {
-            match self.sentence_matcher.map_sentence(ss.get_tokens()) {
+            match self.sentence_mapper.map_sentence(ss.get_tokens()) {
                 Ok(sentence_parts) => mapped_parts.extend(sentence_parts),
                 Err(e) => println!("Could not map: {}", e.to_ascii_lowercase()),
             }

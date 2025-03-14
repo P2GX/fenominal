@@ -4,7 +4,7 @@ use regex::Regex;
 
 static WORD_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"[a-zA-Z]+('-[a-zA-Z]+)?").unwrap());
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct SimpleSentence {
     sentence: String,
     start_pos: usize,

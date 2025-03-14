@@ -1,14 +1,16 @@
 use std::collections::HashMap;
 
-use ontolius::{ontology::csr::MinimalCsrOntology, TermId};
+use ontolius::{
+    ontology::{HierarchyWalks, OntologyTerms},
+    term::{MinimalTerm, Synonymous},
+    TermId,
+};
 
 use crate::fenominal_traits::HpoMatcher;
 
 use super::{
-    hpo_concept::HpoConcept,
-    hpo_concept_hit::HpoConceptHit,
-    hpo_concept_mapper::HpoConceptMapper,
-    hpo_loader::{get_text_to_hpo_term_map, HpoLoader},
+    hpo_concept::HpoConcept, hpo_concept_hit::HpoConceptHit, hpo_concept_mapper::HpoConceptMapper,
+    hpo_loader::get_text_to_hpo_term_map,
 };
 
 pub struct DefaultHpoMapper {
@@ -20,26 +22,33 @@ impl DefaultHpoMapper {
     /// with a longer label in the future.
     pub const MAX_HPO_TERM_TOKEN_COUNT: usize = 14;
 
-    pub fn new(hpo: &MinimalCsrOntology) -> Self {
+    pub fn new<O, T>(hpo: &O) -> Self
+    where
+        O: OntologyTerms<T> + HierarchyWalks,
+        T: MinimalTerm + Synonymous,
+    {
         let text_to_term_map = get_text_to_hpo_term_map(hpo);
-        DefaultHpoMapper::from_map(&text_to_term_map)
+        DefaultHpoMapper::from_map(text_to_term_map.iter().map(|(k, v)| (k.as_ref(), v)))
     }
 
     /// Create an HpoMapper from text_to_tid_map
     ///
     /// # Arguments
     ///
-    /// * `text_to_tid_map` - A map whose keys are lower case HPO labels and synonyms, and who values are the corresponding TermIds.
+    /// * `text_to_term_id` - An iterator with mapping from text to corresponding term ID.
     ///
     /// # Returns
     ///
     /// An HpoMapper object that is ready to use for text mining.
-    pub fn from_map(text_to_tid_map: &HashMap<String, TermId>) -> Self {
+    pub fn from_map<'a, I>(text_to_term_id: I) -> Self
+    where
+        I: IntoIterator<Item = (&'a str, &'a TermId)>,
+    {
         let mut wc_map: HashMap<usize, HpoConceptMapper> = HashMap::new();
         for i in 1..=DefaultHpoMapper::MAX_HPO_TERM_TOKEN_COUNT {
             wc_map.insert(i, HpoConceptMapper::new(i));
         }
-        for (key, value) in text_to_tid_map {
+        for (key, value) in text_to_term_id {
             let concept = HpoConcept::new(key, value.clone());
             let n_tokens = concept.word_count();
             if n_tokens > 14 {

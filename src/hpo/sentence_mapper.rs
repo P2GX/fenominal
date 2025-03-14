@@ -61,8 +61,7 @@ impl SentenceMapper {
                         let mapped_sentence_part = MinedTerm::new(
                             chunk.to_vec(),
                             hpo_id,
-                            startpos,
-                            endpos,
+                            startpos..endpos,
                             "matching",
                             !is_excluded,
                         );
@@ -92,10 +91,10 @@ impl SentenceMapper {
                 let candidates_at_pos_i = candidates_at_pos_i.unwrap();
                 let longest_match = candidates_at_pos_i
                     .iter()
-                    .max_by(|a, b| a.get_end_pos().cmp(&b.get_end_pos()));
+                    .max_by(|&a, &b| a.get_span().end.cmp(&b.get_span().end));
                 if longest_match.is_some() {
                     let longest_match = longest_match.unwrap();
-                    current_span = longest_match.get_end_pos();
+                    current_span = longest_match.get_span().end;
                     mapped_sentence_part_list.push(longest_match.clone());
                     // advance to the last position of the current match
                     // note that this is String position convention, and so the next hist could start at

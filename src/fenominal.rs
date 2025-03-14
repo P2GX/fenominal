@@ -1,113 +1,167 @@
-//! This module is the main entry point.
+//! Implementation of the Fenominal text mining algorithm.
 //!
-//! There are two public functions. One gets a vector of FenominalHit object, and then other gets the corresponding JSON
+//! ## Configure Fenominal
 //!
-//! # Examples
-//! ```ignore
-//! let hp_json_path = "/some/path/hp.json";
-//! let input_string = 'Intellectual disability, macrocephaly, scoliosis'`;
-//! let fenominal = Fenominal::new(hp_json_path_str);
-//! let json = fenominal.map_text_to_json(&input_string);
+//! [`Fenominal`] is created from [`ontolius::ontology::csr::FullCsrOntology`],
+//! which can, in turn, be loaded from a HPO JSON file:
+//!
+//! ```
+//! use std::fs::File;
+//! use std::io::BufReader;
+//! use flate2::bufread::GzDecoder;
+//! use rfenominal::fenominal::Fenominal;
+//! use ontolius::io::OntologyLoaderBuilder;
+//! use ontolius::ontology::csr::FullCsrOntology;
+//!
+//! // Load HPO from the repo, use `flate2` to decompress on the fly
+//! let hp_path = "data/hp.v2024-08-13.json.gz";
+//! let loader = OntologyLoaderBuilder::new().obographs_parser().build();
+//! let hpo = loader.load_from_read(
+//!             GzDecoder::new(BufReader::new(File::open(hp_path).expect("HPO should be readable")))
+//!           ).expect("HPO should be well formatted");
+//!
+//! // Configure Fenominal
+//! let fenominal = Fenominal::from(&hpo);
+//! ```
+//!
+//! ## Use Fenominal
+//! 
+//! There are two implementations of [`TextMiner`] trait,
+//! one for mining [`FenominalHit`]s and the other for getting [`TermId`]s.
+//! 
+//!
+//! ### Example
+//! 
+//! Get [`FenominalHit`]s for an example text:
+//! 
+//! ```
+//! # use std::fs::File;
+//! # use std::io::BufReader;
+//! # use flate2::bufread::GzDecoder;
+//! # use rfenominal::fenominal::Fenominal;
+//! # use ontolius::io::OntologyLoaderBuilder;
+//! # use ontolius::ontology::csr::FullCsrOntology;
+//! # 
+//! # let hp_path = "data/hp.v2024-08-13.json.gz";
+//! # let loader = OntologyLoaderBuilder::new().obographs_parser().build();
+//! # let hpo = loader.load_from_read(
+//! #             GzDecoder::new(BufReader::new(File::open(hp_path).expect("HPO should be readable")))
+//! #           ).expect("HPO should be well formatted");
+//! # 
+//! # let fenominal = Fenominal::from(&hpo);
+//! use rfenominal::{TextMiner, fenominal::FenominalHit};
+//!
+//! // Perform text mining
+//! let text = "Intellectual disability, macrocephaly, scoliosis";
+//! let hits: Vec<FenominalHit> = fenominal.process(&text);
+//!
+//! let labels: Vec<_> = hits.iter().map(|hit| &hit.label).collect();
+//! assert_eq!(labels, &["Macrocephaly", "Scoliosis"]);
 //! ```
 //!
 
-use std::collections::HashSet;
+use std::ops::Range;
 
 use crate::mined_term::MinedTerm;
+use crate::TextMiner;
 use ontolius::ontology::OntologyTerms;
 use ontolius::term::MinimalTerm;
-use ontolius::{io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology, TermId};
+use ontolius::{ontology::csr::FullCsrOntology, TermId};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::hpo::clinical_mapper::ClinicalMapper;
 
+/// A named entity identified by text mining.
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct FenominalHit {
-    term_id: String,
-    term_label: String,
-    start_pos: usize,
-    end_pos: usize,
-    is_observed: bool,
+    /// The entity's term ID.
+    pub term_id: String,
+    /// The entity's label.
+    pub label: String,
+    /// The coordinates of the entity within the source text.
+    pub span: Range<usize>,
+    /// The observation status (present/excluded).
+    pub is_observed: bool,
 }
 
 impl FenominalHit {
-    pub fn new(tid: String, label: &str, start: usize, end: usize, observed: bool) -> Self {
+    pub fn new(term_id: String, label: &str, span: Range<usize>, is_observed: bool) -> Self {
         Self {
-            term_id: tid,
-            term_label: label.to_string(),
-            start_pos: start,
-            end_pos: end,
-            is_observed: observed,
+            term_id,
+            label: label.to_string(),
+            span,
+            is_observed,
         }
     }
 }
 
-pub struct Fenominal {
-    hpo: MinimalCsrOntology,
+/// Fenominal text mining.
+pub struct Fenominal<'a, O> {
+    hpo: &'a O,
     clinical_mapper: ClinicalMapper,
 }
 
-impl Fenominal {
-    pub fn new(hp_json_path: &str) -> Self {
-        let loader = OntologyLoaderBuilder::new().obographs_parser().build();
-        let hpo: MinimalCsrOntology = loader
-            .load_from_path(hp_json_path)
-            .expect("HPO could not be loaded");
-        let clinical_mapper = ClinicalMapper::new(&hpo);
+impl<'a> From<&'a FullCsrOntology> for Fenominal<'a, FullCsrOntology> {
+    fn from(value: &'a FullCsrOntology) -> Self {
         Self {
-            hpo: hpo,
-            clinical_mapper: clinical_mapper,
+            hpo: value,
+            clinical_mapper: ClinicalMapper::new(value),
         }
     }
+}
 
-    fn mined_term_to_hit(&self, mined_term: &MinedTerm) -> Result<FenominalHit, String> {
-        let tid = mined_term.get_term_id();
-        match self.hpo.term_by_id(&tid) {
-            Some(term) => {
-                let label = term.name();
-                let hit = FenominalHit::new(
-                    tid.to_string(),
-                    label,
-                    mined_term.get_start_pos(),
-                    mined_term.get_end_pos(),
-                    mined_term.is_observed(),
-                );
-                return Ok(hit);
-            }
-            None => Err(format!("Could not retrieve term for {}.", tid.to_string())),
-        }
+/// Map an input text to HPO terms.
+///
+/// This implementation is appropriate for use cases where we want a set of unique terms
+/// but do not care about their location in the original text.
+impl<'a, O> TextMiner<TermId> for Fenominal<'a, O> {
+    fn process(&self, text: &str) -> Vec<TermId> {
+        self.clinical_mapper
+            .map_text(text)
+            .into_iter()
+            .map(|mt| mt.term_id)
+            .collect()
     }
+}
 
-    pub fn map_text_to_json(&self, input_text: &str) -> String {
-        let fenominal_hits = self.map_text(input_text);
-        let json_string = serde_json::to_string(&fenominal_hits).unwrap();
-        json_string
-    }
-
-    pub fn map_text(&self, input_text: &str) -> Vec<FenominalHit> {
+/// Map an input text to [`FenominalHit`]s.
+///
+/// This implementation retains information about the hit coordinates
+/// with respect to the source `text`.
+impl TextMiner<FenominalHit> for Fenominal<'_, FullCsrOntology> {
+    fn process(&self, text: &str) -> Vec<FenominalHit> {
         let mut hits = vec![];
-        let mined_terms = self.clinical_mapper.map_text(input_text);
-        for mt in mined_terms {
-            let hit = self.mined_term_to_hit(&mt);
-            match hit {
+        for mt in self.clinical_mapper.map_text(text) {
+            match self.mined_term_to_hit(&mt) {
                 Ok(fhit) => hits.push(fhit),
                 Err(e) => println!("Could not map mined term {:?}", e),
             }
         }
         hits
     }
+}
 
-    /// Map an input text to set of HPO terms
-    ///
-    /// This method is appropriate for use cases where we want a set of unique terms
-    /// but do not care about their location in the original text
-    pub fn map_text_to_term_id_set(&self, input_text: &str) -> HashSet<TermId> {
-        let mut term_id_set: HashSet<TermId> = HashSet::new();
-        let mined_terms = self.clinical_mapper.map_text(input_text);
-        for mt in mined_terms {
-            term_id_set.insert(mt.get_term_id());
+impl<'a, O> Fenominal<'a, O> {
+    fn mined_term_to_hit<T>(&self, mined_term: &MinedTerm) -> Result<FenominalHit, String>
+    where
+        O: OntologyTerms<T>,
+        T: MinimalTerm,
+    {
+        match self.hpo.term_by_id(mined_term.get_term_id()) {
+            Some(term) => {
+                return Ok(FenominalHit::new(
+                    term.identifier().to_string(),
+                    term.name(),
+                    mined_term.get_span(),
+                    mined_term.is_observed(),
+                ));
+            }
+            None => Err(format!(
+                "Could not retrieve term for {:?}.",
+                mined_term.get_term_id()
+            )),
         }
-        term_id_set
     }
 }
