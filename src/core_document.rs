@@ -1,17 +1,12 @@
 use crate::simple_sentence::SimpleSentence;
 
-
-
 pub struct CoreDocument {
     original_text: String,
     sentences: Vec<SimpleSentence>,
-   
     //private final static Set<Character> sentenceEndPunctuation = Set.of('.', '!', '?');
-
 }
 
 impl CoreDocument {
-    
     pub fn new(text: &str) -> Self {
         let mut ssentences = Vec::new();
         // Collect positions of '.', '!', and '?' - sentence boundaries
@@ -36,16 +31,16 @@ impl CoreDocument {
             let part = text[start..].trim();
             if !part.is_empty() {
                 results.push((part, start));
-                ssentences.push(SimpleSentence::new(part, start, text.len() -1));
+                ssentences.push(SimpleSentence::new(part, start, text.len() - 1));
             }
         }
         CoreDocument {
             original_text: text.into(),
-            sentences: ssentences
+            sentences: ssentences,
         }
     }
 
     pub fn get_sentences(&self) -> &[SimpleSentence] {
         &self.sentences
-    } 
+    }
 }

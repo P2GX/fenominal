@@ -1,21 +1,19 @@
 use clap::Parser;
-use serde_json::Value;
-use std::path::PathBuf;
-use std::path::Path;
 use rfenominal::fenominal::Fenominal;
-
-
+use serde_json::Value;
+use std::path::Path;
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(version = "0.1.6", about = "Fenominal implementation in Rust")]
 struct Args {
-   /// Path to the file
-   #[arg(long, value_name = "FILE")]
-   hp: PathBuf,
+    /// Path to the file
+    #[arg(long, value_name = "FILE")]
+    hp: PathBuf,
 
-   /// Input string
-   #[arg(short, long, value_name = "STRING")]
-   input: String,
+    /// Input string
+    #[arg(short, long, value_name = "STRING")]
+    input: String,
 }
 
 fn main() {
@@ -27,7 +25,10 @@ fn main() {
     if hpo_path.exists() {
         println!("[INFO] Processing HPO JSON file: {:?}.", hp_json_path);
     } else {
-        eprintln!("[ERROR] Could not find HPO JSON file at {}.", hp_json_path_str);
+        eprintln!(
+            "[ERROR] Could not find HPO JSON file at {}.",
+            hp_json_path_str
+        );
         return;
     }
     println!("[INFO] Input string: {}", input_string);
@@ -38,4 +39,3 @@ fn main() {
     let pretty_fenominal_hits = serde_json::to_string_pretty(&parsed).unwrap();
     println!("[INFO] Hits:\n{}", &pretty_fenominal_hits);
 }
-

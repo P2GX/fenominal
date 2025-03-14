@@ -1,8 +1,6 @@
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-
-
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct SimpleToken {
@@ -13,19 +11,13 @@ pub struct SimpleToken {
 }
 
 impl SimpleToken {
-
-
-    pub fn new<S: Into<String>>(token: S,
-                            orig_token: S,
-                            start: usize,
-                            end: usize) -> Self {
-            SimpleToken {
-                token: token.into(),
-                original_token: orig_token.into(),
-                start_pos: start,
-                end_pos: end
-            }
-
+    pub fn new<S: Into<String>>(token: S, orig_token: S, start: usize, end: usize) -> Self {
+        SimpleToken {
+            token: token.into(),
+            original_token: orig_token.into(),
+            start_pos: start,
+            end_pos: end,
+        }
     }
 
     pub fn get_original_token(&self) -> &str {
@@ -43,9 +35,7 @@ impl SimpleToken {
     pub fn get_end_pos(&self) -> usize {
         self.end_pos
     }
-
 }
-
 
 #[cfg(test)]
 mod test {
@@ -53,19 +43,12 @@ mod test {
 
     use super::*;
 
-
     #[test]
     fn test_lower_case() {
-        let tests = vec![
-            ("Orange", "orange"),
-            ("Apple", "apple"),
-            ("pear", "pear")
-        ];
+        let tests = vec![("Orange", "orange"), ("Apple", "apple"), ("pear", "pear")];
         for test in tests {
             let st = SimpleToken::new(test.0, test.0, 1, 2);
             assert_eq!(test.1, st.get_lc_original_token());
         }
-
     }
-
 }
