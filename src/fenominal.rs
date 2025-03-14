@@ -16,13 +16,14 @@ use std::collections::HashSet;
 use ontolius::ontology::OntologyTerms;
 use ontolius::term::MinimalTerm;
 use ontolius::{TermId, io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology};
-use serde::Serialize;
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
 use crate::mined_term::MinedTerm;
 
 use crate::hpo::clinical_mapper::ClinicalMapper;
 
 
-#[derive(Serialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct FenominalHit {
     term_id: String,
     term_label: String,
