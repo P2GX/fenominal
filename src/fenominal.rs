@@ -13,7 +13,9 @@
 
 use std::collections::HashSet;
 
-use ontolius::{base::TermId, io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology, prelude::{MinimalTerm, TermAware}};
+use ontolius::ontology::OntologyTerms;
+use ontolius::term::MinimalTerm;
+use ontolius::{TermId, io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology};
 use serde::Serialize;
 use crate::mined_term::MinedTerm;
 
@@ -72,8 +74,7 @@ impl Fenominal {
 
     fn mined_term_to_hit(&self, mined_term: &MinedTerm) -> Result<FenominalHit, String> {
         let tid = mined_term.get_term_id();
-        let term_opt = self.hpo.id_to_term(&tid);
-        match term_opt {
+        match self.hpo.term_by_id(&tid) {
             Some(term) => {
                 let label = term.name();
                 let hit = FenominalHit::new(tid.to_string(), label, mined_term.get_start_pos(), mined_term.get_end_pos(), mined_term.is_observed());

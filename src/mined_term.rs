@@ -14,7 +14,7 @@
 //! }
 //! ```
 
-use ontolius::base::TermId;
+use ontolius::TermId;
 
 use crate::simple_token::SimpleToken;
 

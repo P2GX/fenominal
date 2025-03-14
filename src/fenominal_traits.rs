@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use ontolius::base::TermId;
+use ontolius::TermId;
 
 use crate::simple_token::SimpleToken;
 use crate::{mined_term::MinedTerm, simple_sentence::SimpleSentence};

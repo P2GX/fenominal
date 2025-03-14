@@ -7,7 +7,7 @@
 //! ## Example
 //!
 //! ```ignore
-//! use ontolius::prelude::TermId;
+//! use ontolius::TermId;
 //! use std::collections::HashMap;
 //! use ferriphene::hpo::clinical_mapper::ClinicalMapper;
 //! use ferriphene::hpo::simple_hpo_parser::SimpleHpoParser;
@@ -18,7 +18,7 @@
 //! ```
 
 
-use ontolius::prelude::TermId;
+use ontolius::TermId;
 use std::{collections::{HashMap, HashSet}, fs, path::PathBuf, str::FromStr};
 use crate::fenominal_traits::TermIdToTextMapper;
 

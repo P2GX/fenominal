@@ -1,4 +1,4 @@
-use ontolius::base::TermId;
+use ontolius::TermId;
 
 use super::hpo_concept::HpoConcept;
 

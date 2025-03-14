@@ -17,7 +17,7 @@
 //! ```
 
 use std::collections::HashMap;
-use ontolius::{base::TermId, ontology::csr::MinimalCsrOntology};
+use ontolius::{TermId, ontology::csr::MinimalCsrOntology};
 use crate::{core_document::CoreDocument, mined_term::MinedTerm};
 use super::{default_hpo_mapper::DefaultHpoMapper, sentence_mapper::SentenceMapper};
 

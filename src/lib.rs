@@ -12,7 +12,7 @@ pub mod fenominal;
 
 use std::collections::HashMap;
 
-use ontolius::{base::TermId, io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology};
+use ontolius::{TermId, io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology};
 
 
 pub fn load_hpo(hp_json_path: &str) -> Result<MinimalCsrOntology, String> {

@@ -1,6 +1,6 @@
-use std::{collections::HashSet};
+use std::collections::HashSet;
 
-use ontolius::base::TermId;
+use ontolius::TermId;
 
 use crate::stopwords::is_stop;
 

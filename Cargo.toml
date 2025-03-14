@@ -11,7 +11,7 @@ path = "src/bin/fenominal_main.rs"
 
 [dependencies]
 once_cell = "1.21.0"
-ontolius = "0.4.2" 
+ontolius = "0.5.1" 
 regex = "1.9.6"
 clap = { version = "4.5.32", features = ["derive"] }
 serde = "1.0.219"

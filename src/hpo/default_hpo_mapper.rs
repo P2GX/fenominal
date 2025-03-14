@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use ontolius::{base::TermId, ontology::csr::MinimalCsrOntology};
+use ontolius::{TermId, ontology::csr::MinimalCsrOntology};
 
 use crate::fenominal_traits::HpoMatcher;
 

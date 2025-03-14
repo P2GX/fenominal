@@ -1,7 +1,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use ontolius::{base::{Identified, TermId}, io::OntologyLoaderBuilder, ontology::csr::MinimalCsrOntology, prelude::{DescendantNodes, HierarchyAware, MinimalTerm, TermAware}};
+use ontolius::{common::hpo::PHENOTYPIC_ABNORMALITY, io::OntologyLoaderBuilder, ontology::{csr::MinimalCsrOntology, HierarchyWalks, OntologyTerms}, term::MinimalTerm, Identified, TermId};
 
 use crate::fenominal_traits::TermIdToTextMapper;
 
@@ -45,12 +45,8 @@ pub fn get_text_to_hpo_term_map(hpo: &MinimalCsrOntology)-> HashMap<String, Term
                         .collect();
     let min_synonym_length = 4;
 
-    let PHENOTYPIC_ABNORMALITY: TermId = ("HP", "0000118").into();
-    let idx = hpo.id_to_idx(&PHENOTYPIC_ABNORMALITY)
-        .expect("Phenotypic abnormality not found in HPO");
-    let hierarchy = hpo.hierarchy();
-    let pheno_abn_terms: Vec<_> = hierarchy.iter_descendants_of(idx)
-                    .flat_map(|tidx| hpo.idx_to_term(tidx))
+    let pheno_abn_terms: Vec<_> = hpo.iter_descendant_ids(&PHENOTYPIC_ABNORMALITY)
+                    .flat_map(|tidx| hpo.term_by_id(tidx))
                     .collect();
     for term in pheno_abn_terms {
         let term_id = term.identifier();
@@ -79,12 +75,8 @@ impl TermIdToTextMapper for HpoLoader {
         let omittable_labels: HashSet<&str> = ["negative", "weakness"].iter().cloned().collect();
         let min_synonym_length = 4;
    
-        let PHENOTYPIC_ABNORMALITY: TermId = ("HP", "0000118").into();
-        let idx = self.hpo.id_to_idx(&PHENOTYPIC_ABNORMALITY)
-            .expect("Phenotypic abnormality not found in HPO");
-        let hierarchy = self.hpo.hierarchy();
-        let pheno_abn_terms: Vec<_> = hierarchy.iter_descendants_of(idx)
-                        .flat_map(|tidx| self.hpo.idx_to_term(tidx))
+        let pheno_abn_terms: Vec<_> = self.hpo.iter_descendant_ids(&PHENOTYPIC_ABNORMALITY)
+                        .flat_map(|term_id| self.hpo.term_by_id(term_id))
                         .collect();
         for term in pheno_abn_terms {
             let term_id = term.identifier();
