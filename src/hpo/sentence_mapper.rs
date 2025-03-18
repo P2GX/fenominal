@@ -43,9 +43,10 @@ impl SentenceMapper {
                 let chunk = partition
                     .get(j)
                     .ok_or_else(|| format!("Error: Could not retrieve chunk at index {}", j))?;
+                // the comparisons are all done in lower case, so we retrieve the lc version of the tokens
                 let string_chunks: Vec<String> = chunk
                     .iter()
-                    .map(|stoken| stoken.get_original_token())
+                    .map(|stoken| stoken.get_lc_original_token())
                     .map(|str| str.to_string())
                     .collect();
                 match self.hpo_mapper.get_match(string_chunks) {
