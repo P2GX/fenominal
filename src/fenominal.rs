@@ -56,7 +56,7 @@
 //! let hits: Vec<FenominalHit> = fenominal.process(&text);
 //!
 //! let labels: Vec<_> = hits.iter().map(|hit| &hit.label).collect();
-//! assert_eq!(labels, &["Macrocephaly", "Scoliosis"]);
+//! assert_eq!(labels, &["Intellectual disability", "Macrocephaly", "Scoliosis"]);
 //! ```
 //!
 

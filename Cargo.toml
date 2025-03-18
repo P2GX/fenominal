@@ -13,7 +13,7 @@ features = ["serde"]
 [dependencies]
 clap = { version = "4.5.32", features = ["derive"] }
 once_cell = "1.21.0"
-ontolius = { version = "0.5.1", features = ["csr", "obographs"] }
+ontolius = { version = "0.5.2", features = ["csr", "obographs"] }
 regex = "1.9.6"
 serde = { version = "1.0.219", optional = true }
 serde_json = { version = "1.0.140", optional = true }
