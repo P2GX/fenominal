@@ -6,34 +6,34 @@ pub struct CoreDocument {
     //private final static Set<Character> sentenceEndPunctuation = Set.of('.', '!', '?');
 }
 
+
+
 impl CoreDocument {
+    /// divide original text into sentences with boundaries on period, exclamation or question mark
     pub fn new(text: &str) -> Self {
         let mut ssentences = Vec::new();
-        // Collect positions of '.', '!', and '?' - sentence boundaries
-        let mut results = Vec::new();
+
         let mut start = 0;
-
-        for (i, c) in text.char_indices() {
+        let chars: Vec<char> = text.chars().collect();
+        for (i, &c) in chars.iter().enumerate() {
             if c == '.' || c == '!' || c == '?' {
-                // Extract the substring (trim leading/trailing spaces)
-                let part = text[start..=i].trim();
-
-                if !part.is_empty() {
-                    ssentences.push(SimpleSentence::new(part, start, i));
+                // Look ahead to include the period and any following space(s)
+                let mut end = i + 1;
+                while end < chars.len() && chars[end].is_whitespace() {
+                    end += 1;
                 }
-
-                start = i + 1; // Move start to the next character
+                let sentence: String = chars[start..end].iter().collect();
+                ssentences.push(SimpleSentence::new(sentence.trim_end(), start, end));
+                start = end;
             }
         }
-
-        // Handle any trailing text after the last punctuation
-        if start < text.len() {
-            let part = text[start..].trim();
-            if !part.is_empty() {
-                results.push((part, start));
-                ssentences.push(SimpleSentence::new(part, start, text.len() - 1));
-            }
+            // Add trailing sentence if any
+        if start < chars.len() {
+            let sentence: String = chars[start..].iter().collect();
+            //result.push((start, chars.len(), sentence.trim_end()));
+            ssentences.push(SimpleSentence::new(&sentence.trim_end(), start, chars.len()));
         }
+    
         CoreDocument {
             original_text: text.into(),
             sentences: ssentences,

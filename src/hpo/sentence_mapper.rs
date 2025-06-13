@@ -1,6 +1,6 @@
 use std::{cmp::min, collections::HashMap};
 
-use crate::{hpo::partition::Partition, mined_term::MinedTerm, simple_token::SimpleToken};
+use crate::{hpo::partition::Partition, mined_term::MinedTerm, simple_sentence::SimpleSentence, simple_token::SimpleToken};
 
 use super::default_hpo_mapper::DefaultHpoMapper;
 
@@ -33,7 +33,9 @@ impl SentenceMapper {
         SentenceMapper { hpo_mapper: mapper }
     }
 
-    pub fn map_sentence(&self, tokens: &[SimpleToken]) -> Result<Vec<MinedTerm>, String> {
+    pub fn map_sentence(&self, simple_sentence: &SimpleSentence) -> Result<Vec<MinedTerm>, String> {
+        let tokens: &[SimpleToken] = simple_sentence.get_tokens();
+        let start_pos = simple_sentence.get_start_pos();
         let mut candidates: HashMap<usize, Vec<MinedTerm>> = HashMap::new();
         let max_partition_heuristic = min(10, tokens.len());
         let is_excluded = self.has_negation(tokens);
@@ -49,7 +51,7 @@ impl SentenceMapper {
                     .map(|stoken| stoken.get_lc_original_token())
                     .map(|str| str.to_string())
                     .collect();
-                match self.hpo_mapper.get_match(string_chunks) {
+                match self.hpo_mapper.get_match(&string_chunks) {
                     Some(hpo_match) => {
                         let hpo_id = hpo_match.get_term_id();
                         let start_chunk = chunk.get(0);
@@ -57,13 +59,14 @@ impl SentenceMapper {
                         if start_chunk.is_none() || end_chunk.is_none() {
                             continue; // should never happen
                         }
-                        let startpos = start_chunk.unwrap().get_start_pos();
-                        let endpos = end_chunk.unwrap().get_end_pos();
+                        let startpos = start_chunk.unwrap().get_start_pos() + start_pos;
+                        let endpos = end_chunk.unwrap().get_end_pos() + start_pos;
+                        let matched = string_chunks.join(" ").clone();
                         let mapped_sentence_part = MinedTerm::new(
                             chunk.to_vec(),
                             hpo_id,
                             startpos..endpos,
-                            "matching",
+                            matched,
                             !is_excluded,
                         );
                         //// insert a default value (empty vector) if the key is not present, then add the concept to the list

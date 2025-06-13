@@ -72,7 +72,7 @@ impl DefaultHpoMapper {
     /// # Returns
     ///
     /// An HpoConceptHit or None
-    pub fn get_match(&self, tokens: Vec<String>) -> Option<HpoConceptHit> {
+    pub fn get_match(&self, tokens: &Vec<String>) -> Option<HpoConceptHit> {
         if tokens.len() > DefaultHpoMapper::MAX_HPO_TERM_TOKEN_COUNT {
             println!("Malformed input vector: {:?}", tokens);
             return None;
