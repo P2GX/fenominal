@@ -43,4 +43,8 @@ impl CoreDocument {
     pub fn get_sentences(&self) -> &[SimpleSentence] {
         &self.sentences
     }
+
+    pub fn original_text(&self) -> &str {
+        &self.original_text
+    }
 }

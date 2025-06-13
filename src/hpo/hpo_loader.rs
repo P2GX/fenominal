@@ -37,7 +37,7 @@ where
     O: OntologyTerms<T> + HierarchyWalks,
     T: MinimalTerm + Synonymous,
 {
-    let mut test_to_tid_map = HashMap::new();
+    let mut text_to_tid_map = HashMap::new();
     // These are commmon false-positive results related to HPO synonyms that occur in other contexts
     let omittable_labels: HashSet<String> = ["negative", "weakness"]
         .iter()
@@ -54,13 +54,16 @@ where
         if omittable_labels.contains(&term_label_lc) || term_label_lc.len() < min_synonym_length {
             continue;
         }
-        test_to_tid_map.insert(term_label_lc, term_id.clone());
-        // TODO: Add parsing of synonyms -- need Ontolius upstream!
-        // Remember not to add if length is less than min_synonym_length
-        // Remember to skip the omittable_labels
+        text_to_tid_map.insert(term_label_lc, term_id.clone());
+        for synonym in term.synonyms() {
+            if omittable_labels.contains(&synonym.name) || synonym.name.len() < min_synonym_length {
+                continue;
+            }
+            text_to_tid_map.insert(synonym.name.to_ascii_lowercase(), term_id.clone());
+        }
     }
 
-    test_to_tid_map
+    text_to_tid_map
 }
 
 // impl TermIdToTextMapper for HpoLoader {

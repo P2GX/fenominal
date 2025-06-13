@@ -30,6 +30,8 @@ pub struct SentenceMapper {
 
 impl SentenceMapper {
     pub fn new(mapper: DefaultHpoMapper) -> Self {
+        let texts = vec!["median cleft lip".to_string()];
+        let contains = mapper.get_match(&texts).is_some();
         SentenceMapper { hpo_mapper: mapper }
     }
 
@@ -115,3 +117,74 @@ impl SentenceMapper {
             .any(|token| NEGATION_CLUES.contains(&token.get_lc_original_token()))
     }
 }
+
+
+// region:    --- Tests
+
+#[cfg(test)]
+mod tests {
+
+    use std::str::FromStr;
+
+    use ontolius::TermId;
+    use rstest::{fixture, rstest};
+
+    use crate::hpo::hpo_concept::HpoConcept;
+
+    use super::*;
+
+    
+#[fixture]
+pub fn paramedian_cleft_palate() -> HpoConcept {
+    let hpo_id = TermId::from_str("HP:0009099").unwrap();
+    let label = "paramedian cleft lip";
+    HpoConcept::new(label, hpo_id)
+} 
+
+#[fixture]
+fn decreased_hc() -> HpoConcept {
+    // Microcephaly HP:0000252
+    let hpo_id = TermId::from_str("HP:0040195").unwrap();
+    let label = "Decreased head circumference";
+    HpoConcept::new(label, hpo_id)
+}
+
+#[fixture]
+fn component_token_to_concept_map(
+    decreased_hc: HpoConcept,
+    paramedian_cleft_palate: HpoConcept
+) -> HashMap<String, Vec<HpoConcept>> {
+    let mut map: HashMap<String, Vec<HpoConcept>> = HashMap::new();
+    let dch = vec![decreased_hc];
+    for token in vec!["Decreased", "head", "circumference"] {
+        map.insert(token.to_string(), dch.clone());
+    };
+    let pcp = vec![paramedian_cleft_palate];
+    for token in vec!["paramedian", "cleft", "lip"] {
+        map.insert(token.to_string(), pcp.clone());
+    };
+    map
+}
+
+
+
+#[rstest]
+fn paramedian_cp(
+    component_token_to_concept_map:HashMap<String, Vec<HpoConcept>>,
+    paramedian_cleft_palate: HpoConcept
+)  {
+    let result = component_token_to_concept_map.get("cleft");
+    assert!(result.is_some());
+    let hpo_concept_list = result.unwrap();
+    assert_eq!(1, hpo_concept_list.len());
+    let hpo_concept = hpo_concept_list[0].clone();
+    let expected_term_id: TermId = paramedian_cleft_palate.get_hpo_id();
+    let observed_term_id: TermId = hpo_concept.get_hpo_id();
+    assert_eq!(&expected_term_id, &observed_term_id);
+}
+
+
+    
+}
+
+// endregion: --- Tests

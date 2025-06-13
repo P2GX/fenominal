@@ -88,4 +88,16 @@ impl DefaultHpoMapper {
             return matcher.get_match(slice);
         }
     }
+
+    pub fn show_all_matching_terms(&self, n_tokens: usize, filter_word: &str) {
+        let matcher = self.wordcount_to_matcher.get(&n_tokens);
+        if matcher.is_none() {
+            println!("Could not retrieve matcher for n_tokens={}", n_tokens);
+            return;
+        }
+        let matcher = matcher.unwrap();
+        println!("Showing words matching with {}", filter_word);
+        matcher.show_matching_words(filter_word);
+    }
+
 }

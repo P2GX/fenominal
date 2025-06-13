@@ -10,7 +10,7 @@ use crate::stopwords::is_stop;
 /// searching for matches in input texts. For instance, we store all of the non-stop words in a set and can
 /// check not only for exact matches with the label etc but permutations thereof.
 /// This object is intended to represent a concept from the Ontology and not a hit in an actual text.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct HpoConcept {
     original_concept: String,
     non_stop_words: HashSet<String>,

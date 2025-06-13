@@ -20,14 +20,35 @@ fn test_parse_para_1(
     let fenominal = Fenominal::from(&hpo);
     let fenominal_hits: Vec<FenominalHit> = fenominal.process(para1);
     let hydronephrosis_start = para1.find("hydronephrosis").unwrap();
-    let dilated_ureter_start = para1.find("dilated ureter").unwrap();
+    let hydrouterer_start = para1.find("dilated ureter").unwrap();
+    let hydrouterer_start_2 = para1.find("dilated ureter").unwrap();
+    let hydrouterer_start_2 = para1[hydrouterer_start_2 + 1..]
+        .find("dilated ureter")
+        .map(|i| i + hydrouterer_start_2 + 1)
+        .unwrap();
+
     for h in &fenominal_hits {
         println!("{:?}",h);
     }
-    
-    // pretty-print the JSON response
-    let pretty_fenominal_hits = serde_json::to_string_pretty(&fenominal_hits).unwrap();
-    println!("[INFO] Hits:\n{}", &pretty_fenominal_hits);
+    assert_eq!(3, fenominal_hits.len());
     let hit1 = fenominal_hits.get(0).unwrap();
+    let hit2 = fenominal_hits.get(1).unwrap();
+    let hit3 = fenominal_hits.get(2).unwrap();
+    
     assert_eq!(hydronephrosis_start, hit1.span.start);
+    assert_eq!(hydrouterer_start, hit2.span.start);
+    assert_eq!(hydrouterer_start_2, hit3.span.start);
+}
+
+#[rstest]
+fn test_median_cp(
+    hpo: FullCsrOntology
+) {
+    // Expect to find Cleft palate HP:0000175
+    let text = "Physical examination showed a cleft palate which had been surgically corrected";
+    let fenominal = Fenominal::from(&hpo);
+    let fenominal_hits: Vec<FenominalHit> = fenominal.process(text);
+    assert_eq!(1, fenominal_hits.len());
+    let cp = fenominal_hits[0].clone();
+    assert_eq!("Cleft palate", cp.label);
 }

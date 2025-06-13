@@ -17,6 +17,19 @@ impl HpoConceptMapper {
             component_token_to_concept_map: map,
         }
     }
+
+    /// TEMOP for debug
+    pub fn show_matching_words(&self, filter_word: &str) {
+        for item in self.component_token_to_concept_map.keys() {
+            if item.contains(filter_word) {
+                println!("-{}", &item);
+                let x = self.component_token_to_concept_map.get(item).unwrap();
+                for hc in x {
+                    println!("\t{:?}", hc);
+                }
+            }
+        };
+    }
 }
 
 impl HpoMatcher for HpoConceptMapper {
@@ -54,4 +67,6 @@ impl HpoMatcher for HpoConceptMapper {
                 .push(concept.clone());
         }
     }
+
+    
 }

@@ -14,7 +14,7 @@
 //! use ontolius::ontology::csr::FullCsrOntology;
 //!
 //! // Load HPO from the repo, use `flate2` to decompress on the fly
-//! let hp_path = "resources/hp.v2024-08-13.json.gz";
+//! let hp_path = "resources/hp.v2025-03-03.json.gz";
 //! let loader = OntologyLoaderBuilder::new().obographs_parser().build();
 //! let hpo = loader.load_from_read(
 //!             GzDecoder::new(BufReader::new(File::open(hp_path).expect("HPO should be readable")))
@@ -42,7 +42,7 @@
 //! # use ontolius::io::OntologyLoaderBuilder;
 //! # use ontolius::ontology::csr::FullCsrOntology;
 //! # 
-//! # let hp_path = "data/hp.v2024-08-13.json.gz";
+//! # let hp_path = "resources/hp.v2025-03-03.json.gz";
 //! # let loader = OntologyLoaderBuilder::new().obographs_parser().build();
 //! # let hpo = loader.load_from_read(
 //! #             GzDecoder::new(BufReader::new(File::open(hp_path).expect("HPO should be readable")))
