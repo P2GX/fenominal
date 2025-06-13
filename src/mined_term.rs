@@ -37,7 +37,7 @@ impl MinedTerm {
         tokens: Vec<SimpleToken>,
         term_id: TermId,
         span: Range<usize>,
-        matching: &str,
+        matching: impl Into<String>,
         is_observed: bool,
     ) -> Self {
         MinedTerm {

@@ -35,6 +35,10 @@ impl SimpleToken {
     pub fn get_end_pos(&self) -> usize {
         self.end_pos
     }
+
+    pub fn length(&self) -> usize {
+        1 + self.end_pos - self.start_pos
+    }
 }
 
 #[cfg(test)]

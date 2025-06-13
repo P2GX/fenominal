@@ -14,7 +14,7 @@
 //! use ontolius::ontology::csr::FullCsrOntology;
 //!
 //! // Load HPO from the repo, use `flate2` to decompress on the fly
-//! let hp_path = "data/hp.v2024-08-13.json.gz";
+//! let hp_path = "resources/hp.v2025-03-03.json.gz";
 //! let loader = OntologyLoaderBuilder::new().obographs_parser().build();
 //! let hpo = loader.load_from_read(
 //!             GzDecoder::new(BufReader::new(File::open(hp_path).expect("HPO should be readable")))
@@ -42,7 +42,7 @@
 //! # use ontolius::io::OntologyLoaderBuilder;
 //! # use ontolius::ontology::csr::FullCsrOntology;
 //! # 
-//! # let hp_path = "data/hp.v2024-08-13.json.gz";
+//! # let hp_path = "resources/hp.v2025-03-03.json.gz";
 //! # let loader = OntologyLoaderBuilder::new().obographs_parser().build();
 //! # let hpo = loader.load_from_read(
 //! #             GzDecoder::new(BufReader::new(File::open(hp_path).expect("HPO should be readable")))
@@ -60,6 +60,7 @@
 //! ```
 //!
 
+use std::fmt;
 use std::ops::Range;
 
 use crate::mined_term::MinedTerm;
@@ -94,6 +95,21 @@ impl FenominalHit {
             span,
             is_observed,
         }
+    }
+}
+
+
+impl fmt::Display for FenominalHit {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{} [{}] @ {}..{} ({})",
+            self.label,
+            self.term_id,
+            self.span.start,
+            self.span.end,
+            if self.is_observed { "observed" } else { "excluded" }
+        )
     }
 }
 
@@ -134,6 +150,7 @@ impl TextMiner<FenominalHit> for Fenominal<'_, FullCsrOntology> {
     fn process(&self, text: &str) -> Vec<FenominalHit> {
         let mut hits = vec![];
         for mt in self.clinical_mapper.map_text(text) {
+            println!("process, minedterm={}", mt);
             match self.mined_term_to_hit(&mt) {
                 Ok(fhit) => hits.push(fhit),
                 Err(e) => println!("Could not map mined term {:?}", e),

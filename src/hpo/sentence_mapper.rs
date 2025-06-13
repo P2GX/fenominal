@@ -1,6 +1,6 @@
 use std::{cmp::min, collections::HashMap};
 
-use crate::{hpo::partition::Partition, mined_term::MinedTerm, simple_token::SimpleToken};
+use crate::{hpo::partition::Partition, mined_term::MinedTerm, simple_sentence::SimpleSentence, simple_token::SimpleToken};
 
 use super::default_hpo_mapper::DefaultHpoMapper;
 
@@ -30,10 +30,14 @@ pub struct SentenceMapper {
 
 impl SentenceMapper {
     pub fn new(mapper: DefaultHpoMapper) -> Self {
+        let texts = vec!["median cleft lip".to_string()];
+        let contains = mapper.get_match(&texts).is_some();
         SentenceMapper { hpo_mapper: mapper }
     }
 
-    pub fn map_sentence(&self, tokens: &[SimpleToken]) -> Result<Vec<MinedTerm>, String> {
+    pub fn map_sentence(&self, simple_sentence: &SimpleSentence) -> Result<Vec<MinedTerm>, String> {
+        let tokens: &[SimpleToken] = simple_sentence.get_tokens();
+        let start_pos = simple_sentence.get_start_pos();
         let mut candidates: HashMap<usize, Vec<MinedTerm>> = HashMap::new();
         let max_partition_heuristic = min(10, tokens.len());
         let is_excluded = self.has_negation(tokens);
@@ -49,7 +53,7 @@ impl SentenceMapper {
                     .map(|stoken| stoken.get_lc_original_token())
                     .map(|str| str.to_string())
                     .collect();
-                match self.hpo_mapper.get_match(string_chunks) {
+                match self.hpo_mapper.get_match(&string_chunks) {
                     Some(hpo_match) => {
                         let hpo_id = hpo_match.get_term_id();
                         let start_chunk = chunk.get(0);
@@ -57,13 +61,14 @@ impl SentenceMapper {
                         if start_chunk.is_none() || end_chunk.is_none() {
                             continue; // should never happen
                         }
-                        let startpos = start_chunk.unwrap().get_start_pos();
-                        let endpos = end_chunk.unwrap().get_end_pos();
+                        let startpos = start_chunk.unwrap().get_start_pos() + start_pos;
+                        let endpos = end_chunk.unwrap().get_end_pos() + start_pos;
+                        let matched = string_chunks.join(" ").clone();
                         let mapped_sentence_part = MinedTerm::new(
                             chunk.to_vec(),
                             hpo_id,
                             startpos..endpos,
-                            "matching",
+                            matched,
                             !is_excluded,
                         );
                         //// insert a default value (empty vector) if the key is not present, then add the concept to the list
@@ -112,3 +117,74 @@ impl SentenceMapper {
             .any(|token| NEGATION_CLUES.contains(&token.get_lc_original_token()))
     }
 }
+
+
+// region:    --- Tests
+
+#[cfg(test)]
+mod tests {
+
+    use std::str::FromStr;
+
+    use ontolius::TermId;
+    use rstest::{fixture, rstest};
+
+    use crate::hpo::hpo_concept::HpoConcept;
+
+    use super::*;
+
+    
+#[fixture]
+pub fn paramedian_cleft_palate() -> HpoConcept {
+    let hpo_id = TermId::from_str("HP:0009099").unwrap();
+    let label = "paramedian cleft lip";
+    HpoConcept::new(label, hpo_id)
+} 
+
+#[fixture]
+fn decreased_hc() -> HpoConcept {
+    // Microcephaly HP:0000252
+    let hpo_id = TermId::from_str("HP:0040195").unwrap();
+    let label = "Decreased head circumference";
+    HpoConcept::new(label, hpo_id)
+}
+
+#[fixture]
+fn component_token_to_concept_map(
+    decreased_hc: HpoConcept,
+    paramedian_cleft_palate: HpoConcept
+) -> HashMap<String, Vec<HpoConcept>> {
+    let mut map: HashMap<String, Vec<HpoConcept>> = HashMap::new();
+    let dch = vec![decreased_hc];
+    for token in vec!["Decreased", "head", "circumference"] {
+        map.insert(token.to_string(), dch.clone());
+    };
+    let pcp = vec![paramedian_cleft_palate];
+    for token in vec!["paramedian", "cleft", "lip"] {
+        map.insert(token.to_string(), pcp.clone());
+    };
+    map
+}
+
+
+
+#[rstest]
+fn paramedian_cp(
+    component_token_to_concept_map:HashMap<String, Vec<HpoConcept>>,
+    paramedian_cleft_palate: HpoConcept
+)  {
+    let result = component_token_to_concept_map.get("cleft");
+    assert!(result.is_some());
+    let hpo_concept_list = result.unwrap();
+    assert_eq!(1, hpo_concept_list.len());
+    let hpo_concept = hpo_concept_list[0].clone();
+    let expected_term_id: TermId = paramedian_cleft_palate.get_hpo_id();
+    let observed_term_id: TermId = hpo_concept.get_hpo_id();
+    assert_eq!(&expected_term_id, &observed_term_id);
+}
+
+
+    
+}
+
+// endregion: --- Tests

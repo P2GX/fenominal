@@ -56,7 +56,8 @@ impl ClinicalMapper {
         let sentences = core_document.get_sentences();
         let mut mapped_parts: Vec<MinedTerm> = Vec::new();
         for ss in sentences {
-            match self.sentence_mapper.map_sentence(ss.get_tokens()) {
+            println!("simple sentence: {}", ss);
+            match self.sentence_mapper.map_sentence(ss) {
                 Ok(sentence_parts) => mapped_parts.extend(sentence_parts),
                 Err(e) => println!("Could not map: {}", e.to_ascii_lowercase()),
             }

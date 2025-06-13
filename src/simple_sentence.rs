@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::simple_token::SimpleToken;
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -45,6 +47,19 @@ impl SimpleSentence {
 
     pub fn get_tokens(&self) -> &[SimpleToken] {
         &self.tokens
+    }
+}
+
+impl Display for SimpleSentence {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "SimpleSentence(id: {} [{}-{}]-# tokens {})",
+            self.sentence,
+            &self.start_pos,
+            &self.end_pos,
+            self.tokens.len()
+        )
     }
 }
 

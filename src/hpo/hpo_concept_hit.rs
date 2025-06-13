@@ -5,6 +5,7 @@ use super::hpo_concept::HpoConcept;
 ///  * This is the object that represents an actual match of an HPO concept with a part of the text and includes
 /// the length of the longest stretch of words matched in the original order.
 /// TODO -- not sure we need extra struct for this?
+#[derive(Debug)]
 pub struct HpoConceptHit {
     hpo_concept: HpoConcept,
     n_matching_words: usize,
