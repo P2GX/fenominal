@@ -1,6 +1,6 @@
 [package]
-name = "rfenominal"
-version = "0.1.11"
+name = "fenominal"
+version = "0.1.12"
 description = "HPO-based text mining. Rust version of fenominal"
 edition = "2021"
 
