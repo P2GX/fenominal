@@ -19,7 +19,7 @@
 use std::{marker::PhantomData, sync::Arc};
 
 use super::{default_hpo_mapper::DefaultHpoMapper, sentence_mapper::SentenceMapper};
-use crate::{core_document::CoreDocument, mined_term::MinedTerm};
+use crate::{core_document::CoreDocument, fenominal::FenominalHit, mined_term::MinedTerm};
 use ontolius::{
     ontology::{HierarchyWalks, OntologyTerms},
     term::{MinimalTerm, Synonymous},
@@ -29,11 +29,7 @@ use ontolius::{
 pub struct ClinicalMapper<O, T> where
         O: OntologyTerms<T> + HierarchyWalks,
         T: MinimalTerm + Synonymous {
-    sentence_mapper: SentenceMapper,
-    /// Ontolius HPO object
-    ontology: Arc<O>,
-    /// The following is required because T is only used in the trait bounds.
-    _marker: PhantomData<T>,
+    sentence_mapper: SentenceMapper<O,T>,
 }
 
 impl<O, T> ClinicalMapper<O, T> where
@@ -42,31 +38,16 @@ impl<O, T> ClinicalMapper<O, T> where
     pub fn new(hpo: Arc<O>) -> Self
     {
         let hpo_arc = Arc::clone(&hpo);
-        let default_hpo_mapper = DefaultHpoMapper::new(hpo);
         Self {
-            sentence_mapper: SentenceMapper::new(default_hpo_mapper),
-            ontology: hpo_arc,
-            _marker: PhantomData::<T>,
+            sentence_mapper: SentenceMapper::new(hpo_arc),
         }
     }
 
-    /* 
-    pub fn from_map<'a, I>(text_to_tid_map: I) -> Self
-    where
-        I: IntoIterator<Item = (&'a str, &'a TermId)>,
-    {
-        let default_hpo_mapper = DefaultHpoMapper::from_map(text_to_tid_map);
-        ClinicalMapper {
-            sentence_mapper: SentenceMapper::new(default_hpo_mapper),
-        }
-    }*/
-
-    pub fn map_text(&self, text: &str) -> Vec<MinedTerm> {
+    pub fn map_text(&self, text: &str) -> Vec<FenominalHit> {
         let core_document = CoreDocument::new(text);
         let sentences = core_document.get_sentences();
-        let mut mapped_parts: Vec<MinedTerm> = Vec::new();
+        let mut mapped_parts: Vec<FenominalHit> = Vec::new();
         for ss in sentences {
-            println!("simple sentence: {}", ss);
             match self.sentence_mapper.map_sentence(ss) {
                 Ok(sentence_parts) => mapped_parts.extend(sentence_parts),
                 Err(e) => println!("Could not map: {}", e.to_ascii_lowercase()),

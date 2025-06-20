@@ -98,6 +98,10 @@ impl FenominalHit {
             is_observed,
         }
     }
+
+    pub fn get_span(&self) -> Range<usize> {
+        Clone::clone(&self.span)
+    }
 }
 
 
@@ -139,73 +143,15 @@ impl<O, T> Fenominal<O, T>
     }
 }    
 
-/* 
-impl<O, T> From<&'a FullCsrOntology> for Fenominal<'a, FullCsrOntology> {
-    fn from(value: &'a FullCsrOntology) -> Self {
-        Self {
-            hpo: value,
-            clinical_mapper: ClinicalMapper::new(value),
-        }
-    }
-}*/
-
-/// Map an input text to HPO terms.
-///
-/// This implementation is appropriate for use cases where we want a set of unique terms
-/// but do not care about their location in the original text.
-impl<O, T> TextMiner<TermId> for Fenominal<O, T> where
-        O: OntologyTerms<T> + HierarchyWalks,
-        T: MinimalTerm + Synonymous{
-    fn process(&self, text: &str) -> Vec<TermId> {
-        self.clinical_mapper
-            .map_text(text)
-            .into_iter()
-            .map(|mt| mt.term_id)
-            .collect()
-    }
-}
 
 /// Map an input text to [`FenominalHit`]s.
 ///
-/// This implementation retains information about the hit coordinates
+/// Each fenominal hit has information about the term id and label and hit coordinates
 /// with respect to the source `text`.
 impl<O, T> TextMiner<FenominalHit> for Fenominal<O, T> where
         O: OntologyTerms<T> + HierarchyWalks,
         T: MinimalTerm + Synonymous {
     fn process(&self, text: &str) -> Vec<FenominalHit> {
-        let mut hits = vec![];
-        for mt in self.clinical_mapper.map_text(text) {
-            println!("process, minedterm={}", mt);
-            match self.mined_term_to_hit(&mt) {
-                Ok(fhit) => hits.push(fhit),
-                Err(e) => println!("Could not map mined term {:?}", e),
-            }
-        }
-        hits
-    }
-}
-
-impl<O, T> Fenominal<O, T> where
-        O: OntologyTerms<T> + HierarchyWalks,
-        T: MinimalTerm + Synonymous {
-    fn mined_term_to_hit(&self, mined_term: &MinedTerm) -> Result<FenominalHit, String>
-    where
-        O: OntologyTerms<T>,
-        T: MinimalTerm,
-    {
-        match self.hpo.term_by_id(mined_term.get_term_id()) {
-            Some(term) => {
-                return Ok(FenominalHit::new(
-                    term.identifier().to_string(),
-                    term.name(),
-                    mined_term.get_span(),
-                    mined_term.is_observed(),
-                ));
-            }
-            None => Err(format!(
-                "Could not retrieve term for {:?}.",
-                mined_term.get_term_id()
-            )),
-        }
+        self.clinical_mapper.map_text(text)
     }
 }

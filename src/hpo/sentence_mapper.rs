@@ -1,11 +1,22 @@
+//! SentanceMapper
+//! 
+//! Structure to coordinate the text mining of an individual sentence.
+//! An assumption of this application is that any valid HPO term will be 
+//! completely contained within a sentence. Therefore, fenominal first
+//! splits the input text into sentences, and then performance text mining
+//! on each sentence in this module.
+
+use std::fmt::format;
+use std::marker::PhantomData;
+use std::sync::Arc;
 use std::{cmp::min, collections::HashMap};
-
-use crate::{hpo::partition::Partition, mined_term::MinedTerm, simple_sentence::SimpleSentence, simple_token::SimpleToken};
-
-use super::default_hpo_mapper::DefaultHpoMapper;
-
 use once_cell::sync::Lazy;
+use ontolius::ontology::{HierarchyWalks, OntologyTerms};
+use ontolius::term::{self, MinimalTerm, Synonymous};
 use std::collections::HashSet;
+use crate::fenominal::FenominalHit;
+use crate::{hpo::partition::Partition, mined_term::MinedTerm, simple_sentence::SimpleSentence, simple_token::SimpleToken};
+use crate::hpo::default_hpo_mapper::DefaultHpoMapper;
 
 /// This is a set of words that we use to indentify exclusion (negation) of phenotypic abnormality
 ///
@@ -24,19 +35,31 @@ static NEGATION_CLUES: Lazy<HashSet<String>> = Lazy::new(|| {
     set
 });
 
-pub struct SentenceMapper {
+pub struct SentenceMapper<O, T> where
+        O: OntologyTerms<T> + HierarchyWalks,
+        T: MinimalTerm + Synonymous {
     hpo_mapper: DefaultHpoMapper,
+    ontology: Arc<O>,
+    _marker: PhantomData<T>,
+
 }
 
-impl SentenceMapper {
-    pub fn new(mapper: DefaultHpoMapper) -> Self {
-        SentenceMapper { hpo_mapper: mapper }
+impl<O, T>  SentenceMapper<O, T> where
+        O: OntologyTerms<T> + HierarchyWalks,
+        T: MinimalTerm + Synonymous {
+    pub fn new(ontology: Arc<O>) -> Self {
+        let mapper = DefaultHpoMapper::new(ontology.clone());
+        SentenceMapper { 
+            hpo_mapper: mapper,
+            ontology: ontology.clone(),
+            _marker: PhantomData,
+        }
     }
 
-    pub fn map_sentence(&self, simple_sentence: &SimpleSentence) -> Result<Vec<MinedTerm>, String> {
+    pub fn map_sentence(&self, simple_sentence: &SimpleSentence) -> Result<Vec<FenominalHit>, String> {
         let tokens: &[SimpleToken] = simple_sentence.get_tokens();
         let start_pos = simple_sentence.get_start_pos();
-        let mut candidates: HashMap<usize, Vec<MinedTerm>> = HashMap::new();
+        let mut candidates: HashMap<usize, Vec<FenominalHit>> = HashMap::new();
         let max_partition_heuristic = min(10, tokens.len());
         let is_excluded = self.has_negation(tokens);
         for i in 1..=max_partition_heuristic {
@@ -54,6 +77,10 @@ impl SentenceMapper {
                 match self.hpo_mapper.get_match(&string_chunks) {
                     Some(hpo_match) => {
                         let hpo_id = hpo_match.get_term_id();
+                        let term = match self.ontology.term_by_id(&hpo_id) {
+                            Some(term) => term,
+                            None => {return Err(format!("could not retrieve term for {}", &hpo_id));},
+                        };
                         let start_chunk = chunk.get(0);
                         let end_chunk = chunk.get(chunk.len() - 1);
                         if start_chunk.is_none() || end_chunk.is_none() {
@@ -61,12 +88,10 @@ impl SentenceMapper {
                         }
                         let startpos = start_chunk.unwrap().get_start_pos() + start_pos;
                         let endpos = end_chunk.unwrap().get_end_pos() + start_pos;
-                        let matched = string_chunks.join(" ").clone();
-                        let mapped_sentence_part = MinedTerm::new(
-                            chunk.to_vec(),
-                            hpo_id,
+                        let mapped_sentence_part = FenominalHit::new(
+                            hpo_id.to_string(),
+                            term.name(),
                             startpos..endpos,
-                            matched,
                             !is_excluded,
                         );
                         //// insert a default value (empty vector) if the key is not present, then add the concept to the list
