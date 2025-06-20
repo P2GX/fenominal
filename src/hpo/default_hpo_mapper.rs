@@ -6,10 +6,9 @@ use ontolius::{
     TermId,
 };
 
-use crate::fenominal_traits::HpoMatcher;
 
 use super::{
-    hpo_concept::HpoConcept, hpo_concept_hit::HpoConceptHit, hpo_concept_mapper::HpoConceptMapper,
+    hpo_concept::HpoConcept, hpo_concept_mapper::HpoConceptMapper,
     hpo_loader::get_text_to_hpo_term_map,
 };
 
@@ -72,7 +71,7 @@ impl DefaultHpoMapper {
     /// # Returns
     ///
     /// An HpoConceptHit or None
-    pub fn get_match(&self, tokens: &Vec<String>) -> Option<HpoConceptHit> {
+    pub fn get_match(&self, tokens: &Vec<String>) -> Option<HpoConcept> {
         if tokens.len() > DefaultHpoMapper::MAX_HPO_TERM_TOKEN_COUNT {
             println!("Malformed input vector: {:?}", tokens);
             return None;
@@ -87,17 +86,6 @@ impl DefaultHpoMapper {
             let slice: &[&str] = &vec_of_str_refs;
             return matcher.get_match(slice);
         }
-    }
-
-    pub fn show_all_matching_terms(&self, n_tokens: usize, filter_word: &str) {
-        let matcher = self.wordcount_to_matcher.get(&n_tokens);
-        if matcher.is_none() {
-            println!("Could not retrieve matcher for n_tokens={}", n_tokens);
-            return;
-        }
-        let matcher = matcher.unwrap();
-        println!("Showing words matching with {}", filter_word);
-        matcher.show_matching_words(filter_word);
     }
 
 }

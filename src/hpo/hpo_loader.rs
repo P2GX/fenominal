@@ -2,13 +2,12 @@ use std::{collections::{HashMap, HashSet}, sync::Arc};
 
 use ontolius::{
     common::hpo::PHENOTYPIC_ABNORMALITY,
-    io::OntologyLoaderBuilder,
-    ontology::{csr::MinimalCsrOntology, HierarchyWalks, OntologyTerms},
+    ontology::{HierarchyWalks, OntologyTerms},
     term::{MinimalTerm, Synonymous},
-    Identified, TermId,
+    TermId,
 };
 
-use crate::fenominal_traits::TermIdToTextMapper;
+
 
 // /// Load the HPO
 // /// The purpose of this struct is to create a Map with term labels and synonyms (Keys) and TermIds (value)

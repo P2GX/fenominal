@@ -1,9 +1,8 @@
 use rstest::fixture;
 use ontolius::{io::OntologyLoaderBuilder, ontology::csr::FullCsrOntology};
-use std::{collections::HashMap, fs::File, io::BufReader, sync::Arc};
+use std::{fs::File, io::BufReader, sync::Arc};
 use flate2::bufread::GzDecoder;
-use std::{str::FromStr, vec};
-use ontolius::{term::Term, TermId};
+
 
 
 

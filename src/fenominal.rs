@@ -50,7 +50,7 @@
 //!            ).expect("HPO should be well formatted");
 //! let hpo = Arc::new(hpo);
 //! let fenominal = Fenominal::new(hpo);
-//! use fenominal::{TextMiner, fenominal::FenominalHit};
+//! use fenominal::fenominal::FenominalHit;
 //!
 //! // Perform text mining
 //! let text = "Intellectual disability, macrocephaly, scoliosis";
@@ -65,15 +65,15 @@ use std::fmt;
 use std::ops::Range;
 use std::sync::Arc;
 
-use crate::mined_term::MinedTerm;
-use crate::TextMiner;
+
+use crate::core_document::CoreDocument;
+use crate::hpo::sentence_mapper::SentenceMapper;
 use ontolius::ontology::{HierarchyWalks, OntologyTerms};
 use ontolius::term::{MinimalTerm, Synonymous};
-use ontolius::{ontology::csr::FullCsrOntology, TermId};
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::hpo::clinical_mapper::ClinicalMapper;
 
 /// A named entity identified by text mining.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -123,9 +123,7 @@ impl fmt::Display for FenominalHit {
 pub struct Fenominal<O, T> where
         O: OntologyTerms<T> + HierarchyWalks,
         T: MinimalTerm + Synonymous  {
-
-    clinical_mapper: ClinicalMapper<O,T>,
-    hpo: Arc<O>
+    sentence_mapper: SentenceMapper<O,T>,
 }
 
 impl<O, T> Fenominal<O, T> 
@@ -137,21 +135,26 @@ impl<O, T> Fenominal<O, T>
     pub fn new(hpo: Arc<O>)-> Self {
         let hpo_arc = Arc::clone(&hpo);
         Self {
-            clinical_mapper: ClinicalMapper::new(hpo),
-            hpo: hpo_arc
+            sentence_mapper: SentenceMapper::new(hpo_arc),
         }
+    }
+
+    pub fn map_text(&self, text: &str) -> Vec<FenominalHit> {
+        let core_document = CoreDocument::new(text);
+        let sentences = core_document.get_sentences();
+        let mut mapped_parts: Vec<FenominalHit> = Vec::new();
+        for ss in sentences {
+            match self.sentence_mapper.map_sentence(ss) {
+                Ok(sentence_parts) => mapped_parts.extend(sentence_parts),
+                Err(e) => println!("Could not map: {}", e.to_ascii_lowercase()),
+            }
+        }
+        mapped_parts
+    }
+
+    pub fn process(&self, text: &str) -> Vec<FenominalHit> {
+        self.map_text(text)
     }
 }    
 
 
-/// Map an input text to [`FenominalHit`]s.
-///
-/// Each fenominal hit has information about the term id and label and hit coordinates
-/// with respect to the source `text`.
-impl<O, T> TextMiner<FenominalHit> for Fenominal<O, T> where
-        O: OntologyTerms<T> + HierarchyWalks,
-        T: MinimalTerm + Synonymous {
-    fn process(&self, text: &str) -> Vec<FenominalHit> {
-        self.clinical_mapper.map_text(text)
-    }
-}

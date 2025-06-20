@@ -3,7 +3,6 @@ use ontolius::io::OntologyLoaderBuilder;
 use ontolius::ontology::csr::FullCsrOntology;
 use fenominal::fenominal::Fenominal;
 use fenominal::fenominal::FenominalHit;
-use fenominal::TextMiner;
 use std::error::Error;
 use std::path::Path;
 use std::path::PathBuf;

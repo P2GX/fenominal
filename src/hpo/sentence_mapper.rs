@@ -6,16 +6,15 @@
 //! splits the input text into sentences, and then performance text mining
 //! on each sentence in this module.
 
-use std::fmt::format;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use std::{cmp::min, collections::HashMap};
 use once_cell::sync::Lazy;
 use ontolius::ontology::{HierarchyWalks, OntologyTerms};
-use ontolius::term::{self, MinimalTerm, Synonymous};
+use ontolius::term::{MinimalTerm, Synonymous};
 use std::collections::HashSet;
 use crate::fenominal::FenominalHit;
-use crate::{hpo::partition::Partition, mined_term::MinedTerm, simple_sentence::SimpleSentence, simple_token::SimpleToken};
+use crate::{hpo::partition::Partition, simple_sentence::SimpleSentence, simple_token::SimpleToken};
 use crate::hpo::default_hpo_mapper::DefaultHpoMapper;
 
 /// This is a set of words that we use to indentify exclusion (negation) of phenotypic abnormality
@@ -76,10 +75,10 @@ impl<O, T>  SentenceMapper<O, T> where
                     .collect();
                 match self.hpo_mapper.get_match(&string_chunks) {
                     Some(hpo_match) => {
-                        let hpo_id = hpo_match.get_term_id();
-                        let term = match self.ontology.term_by_id(&hpo_id) {
+                        let hpo_id = hpo_match.get_hpo_id();
+                        let term = match self.ontology.term_by_id(hpo_id) {
                             Some(term) => term,
-                            None => {return Err(format!("could not retrieve term for {}", &hpo_id));},
+                            None => {return Err(format!("could not retrieve term for {}", hpo_id));},
                         };
                         let start_chunk = chunk.get(0);
                         let end_chunk = chunk.get(chunk.len() - 1);
@@ -201,9 +200,9 @@ fn paramedian_cp(
     let hpo_concept_list = result.unwrap();
     assert_eq!(1, hpo_concept_list.len());
     let hpo_concept = hpo_concept_list[0].clone();
-    let expected_term_id: TermId = paramedian_cleft_palate.get_hpo_id();
-    let observed_term_id: TermId = hpo_concept.get_hpo_id();
-    assert_eq!(&expected_term_id, &observed_term_id);
+    let expected_term_id: &TermId = paramedian_cleft_palate.get_hpo_id();
+    let observed_term_id: &TermId = hpo_concept.get_hpo_id();
+    assert_eq!(expected_term_id, observed_term_id);
 }
 
 

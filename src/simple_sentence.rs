@@ -69,24 +69,24 @@ mod test {
 
     use super::*;
 
-    const sentence1: &str = "The quick brown fox jumps over the lazy dog. ";
+    const SENTENCE1: &str = "The quick brown fox jumps over the lazy dog. ";
 
     #[test]
     fn test_equality() {
-        let ssentence = SimpleSentence::new(sentence1, 0, 2);
-        assert_eq!(sentence1, ssentence.sentence);
+        let ssentence = SimpleSentence::new(SENTENCE1, 0, 2);
+        assert_eq!(SENTENCE1, ssentence.sentence);
     }
 
     #[test]
     fn test_tokenize() {
         // sentence 1 has nin tokens
-        let ssentence = SimpleSentence::new(sentence1, 0, 2);
+        let ssentence = SimpleSentence::new(SENTENCE1, 0, 2);
         assert_eq!(9, ssentence.tokens.len());
     }
 
     #[test]
     fn test_equality_of_tokens() {
-        let ssentence = SimpleSentence::new(sentence1, 0, 2);
+        let ssentence = SimpleSentence::new(SENTENCE1, 0, 2);
         let tokens = &ssentence.tokens;
         assert_eq!("The", tokens.get(0).unwrap().get_original_token());
         assert_eq!("quick", tokens.get(1).unwrap().get_original_token());
@@ -100,7 +100,7 @@ mod test {
     }
     #[test]
     fn test_test_positions() {
-        let ssentence = SimpleSentence::new(sentence1, 106, 202);
+        let ssentence = SimpleSentence::new(SENTENCE1, 106, 202);
         assert_eq!(106, ssentence.get_start_pos());
         assert_eq!(202, ssentence.get_end_pos());
     }
