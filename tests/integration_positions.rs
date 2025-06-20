@@ -3,7 +3,7 @@ mod common;
 use std::sync::Arc;
 
 use ontolius::ontology::csr::FullCsrOntology;
-use rfenominal::{fenominal::{Fenominal, FenominalHit}, TextMiner};
+use fenominal::{fenominal::{Fenominal, FenominalHit}, TextMiner};
 use rstest::rstest;
 use common::hpo;
 

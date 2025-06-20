@@ -9,7 +9,7 @@
 //! use std::fs::File;
 //! use std::io::BufReader;
 //! use flate2::bufread::GzDecoder;
-//! use rfenominal::fenominal::Fenominal;
+//! use fenominal::fenominal::Fenominal;
 //! use ontolius::io::OntologyLoaderBuilder;
 //! use ontolius::ontology::csr::FullCsrOntology;
 //!
@@ -35,21 +35,19 @@
 //! Get [`FenominalHit`]s for an example text:
 //! 
 //! ```
-//! # use std::fs::File;
-//! # use std::io::BufReader;
-//! # use flate2::bufread::GzDecoder;
-//! # use rfenominal::fenominal::Fenominal;
-//! # use ontolius::io::OntologyLoaderBuilder;
-//! # use ontolius::ontology::csr::FullCsrOntology;
-//! # 
-//! # let hp_path = "resources/hp.v2025-03-03.json.gz";
-//! # let loader = OntologyLoaderBuilder::new().obographs_parser().build();
-//! # let hpo = loader.load_from_read(
-//! #             GzDecoder::new(BufReader::new(File::open(hp_path).expect("HPO should be readable")))
-//! #           ).expect("HPO should be well formatted");
-//! # 
-//! # let fenominal = Fenominal::from(&hpo);
-//! use rfenominal::{TextMiner, fenominal::FenominalHit};
+//! use std::fs::File;
+//! use std::io::BufReader;
+//! use flate2::bufread::GzDecoder;
+//! use fenominal::fenominal::Fenominal;
+//! use ontolius::io::OntologyLoaderBuilder;
+//! use ontolius::ontology::csr::FullCsrOntology;
+//! let hp_path = "resources/hp.v2025-03-03.json.gz";
+//! let loader = OntologyLoaderBuilder::new().obographs_parser().build();
+//! let hpo = loader.load_from_read(
+//!              GzDecoder::new(BufReader::new(File::open(hp_path).expect("HPO should be readable")))
+//!            ).expect("HPO should be well formatted");
+//! let fenominal = Fenominal::from(&hpo);
+//! use fenominal::{TextMiner, fenominal::FenominalHit};
 //!
 //! // Perform text mining
 //! let text = "Intellectual disability, macrocephaly, scoliosis";
