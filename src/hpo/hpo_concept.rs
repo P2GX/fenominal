@@ -44,8 +44,8 @@ impl HpoConcept {
         return self.non_stop_words == *other_non_stop_words;
     }
 
-    pub fn get_hpo_id(&self) -> TermId {
-        self.term_id.clone()
+    pub fn get_hpo_id(&self) -> &TermId {
+        &self.term_id
     }
 
     pub fn hpo_id_equal(&self, other_tid: &TermId) -> bool {

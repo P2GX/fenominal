@@ -1,8 +1,5 @@
 use std::collections::{HashMap, HashSet};
-
-use crate::fenominal_traits::HpoMatcher;
-
-use super::{hpo_concept::HpoConcept, hpo_concept_hit::HpoConceptHit};
+use super::{hpo_concept::HpoConcept};
 
 pub struct HpoConceptMapper {
     n_words: usize,
@@ -18,27 +15,7 @@ impl HpoConceptMapper {
         }
     }
 
-    /// TEMOP for debug
-    pub fn show_matching_words(&self, filter_word: &str) {
-        for item in self.component_token_to_concept_map.keys() {
-            if item.contains(filter_word) {
-                println!("-{}", &item);
-                let x = self.component_token_to_concept_map.get(item).unwrap();
-                for hc in x {
-                    println!("\t{:?}", hc);
-                }
-            }
-        };
-    }
-}
-
-impl HpoMatcher for HpoConceptMapper {
-    /// Attempt to find a match to an HpoConcept
-    ///
-    /// Arguments   
-    ///  list of lexical clusters mapped to the original text that have been preprocessed to remove stopwords
-
-    fn get_match(&self, words: &[&str]) -> Option<HpoConceptHit> {
+    pub fn get_match(&self, words: &[&str]) -> std::option::Option<HpoConcept> {
         let token_set: HashSet<String> = words.iter().map(|&s| s.to_string()).collect();
 
         for token in &token_set {
@@ -48,7 +25,7 @@ impl HpoMatcher for HpoConceptMapper {
                     for cpt in clist {
                         if cpt.non_stop_set_equal(&token_set) {
                             // We have a match!
-                            return Some(HpoConceptHit::new(cpt.clone(), token_set.len()));
+                            return Some(cpt.clone());
                         }
                     }
                 }
@@ -58,7 +35,7 @@ impl HpoMatcher for HpoConceptMapper {
         None // if we get here, we have not matched anything
     }
 
-    fn add_concept(&mut self, concept: &HpoConcept) {
+    pub fn add_concept(&mut self, concept: &HpoConcept) {
         for token in concept.get_non_stop_words() {
             // insert a default value (empty vector) if the key is not present, then add the concept to the list
             self.component_token_to_concept_map
@@ -67,6 +44,5 @@ impl HpoMatcher for HpoConceptMapper {
                 .push(concept.clone());
         }
     }
-
-    
 }
+

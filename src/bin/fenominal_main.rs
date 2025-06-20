@@ -1,12 +1,12 @@
 use clap::Parser;
 use ontolius::io::OntologyLoaderBuilder;
 use ontolius::ontology::csr::FullCsrOntology;
-use rfenominal::fenominal::Fenominal;
-use rfenominal::fenominal::FenominalHit;
-use rfenominal::TextMiner;
+use fenominal::fenominal::Fenominal;
+use fenominal::fenominal::FenominalHit;
 use std::error::Error;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 #[derive(Parser, Debug)]
 #[command(version = "0.1.6", about = "Fenominal implementation in Rust")]
@@ -34,7 +34,8 @@ fn main() -> Result<(), Box<dyn Error>>{
     println!("[INFO] Input string: {}", input_string);
     let loader = OntologyLoaderBuilder::new().obographs_parser().build();
     let hpo: FullCsrOntology = loader.load_from_path(hp_json_path_str).unwrap();
-    let fenominal = Fenominal::from(&hpo);
+    let hpo = Arc::new(hpo);
+    let fenominal = Fenominal::new(hpo);
     let fenominal_hits: Vec<FenominalHit> = fenominal.process(&input_string);
     
     // pretty-print the JSON response
