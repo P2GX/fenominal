@@ -8,6 +8,7 @@
 //! ```
 //! use std::fs::File;
 //! use std::io::BufReader;
+//! use std::sync::Arc;
 //! use flate2::bufread::GzDecoder;
 //! use fenominal::fenominal::Fenominal;
 //! use ontolius::io::OntologyLoaderBuilder;
@@ -16,12 +17,12 @@
 //! // Load HPO from the repo, use `flate2` to decompress on the fly
 //! let hp_path = "resources/hp.v2025-03-03.json.gz";
 //! let loader = OntologyLoaderBuilder::new().obographs_parser().build();
-//! let hpo = loader.load_from_read(
+//! let hpo: FullCsrOntology = loader.load_from_read(
 //!             GzDecoder::new(BufReader::new(File::open(hp_path).expect("HPO should be readable")))
 //!           ).expect("HPO should be well formatted");
-//!
+//! let hpo = Arc::new(hpo);
 //! // Configure Fenominal
-//! let fenominal = Fenominal::from(&hpo);
+//! let fenominal = Fenominal::new(hpo);
 //! ```
 //!
 //! ## Use Fenominal
@@ -37,16 +38,18 @@
 //! ```
 //! use std::fs::File;
 //! use std::io::BufReader;
+//! use std::sync::Arc;
 //! use flate2::bufread::GzDecoder;
 //! use fenominal::fenominal::Fenominal;
 //! use ontolius::io::OntologyLoaderBuilder;
 //! use ontolius::ontology::csr::FullCsrOntology;
 //! let hp_path = "resources/hp.v2025-03-03.json.gz";
 //! let loader = OntologyLoaderBuilder::new().obographs_parser().build();
-//! let hpo = loader.load_from_read(
+//! let hpo: FullCsrOntology = loader.load_from_read(
 //!              GzDecoder::new(BufReader::new(File::open(hp_path).expect("HPO should be readable")))
 //!            ).expect("HPO should be well formatted");
-//! let fenominal = Fenominal::from(&hpo);
+//! let hpo = Arc::new(hpo);
+//! let fenominal = Fenominal::new(hpo);
 //! use fenominal::{TextMiner, fenominal::FenominalHit};
 //!
 //! // Perform text mining
@@ -60,11 +63,12 @@
 
 use std::fmt;
 use std::ops::Range;
+use std::sync::Arc;
 
 use crate::mined_term::MinedTerm;
 use crate::TextMiner;
-use ontolius::ontology::OntologyTerms;
-use ontolius::term::MinimalTerm;
+use ontolius::ontology::{HierarchyWalks, OntologyTerms};
+use ontolius::term::{MinimalTerm, Synonymous};
 use ontolius::{ontology::csr::FullCsrOntology, TermId};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -112,25 +116,46 @@ impl fmt::Display for FenominalHit {
 }
 
 /// Fenominal text mining.
-pub struct Fenominal<'a, O> {
-    hpo: &'a O,
-    clinical_mapper: ClinicalMapper,
+pub struct Fenominal<O, T> where
+        O: OntologyTerms<T> + HierarchyWalks,
+        T: MinimalTerm + Synonymous  {
+
+    clinical_mapper: ClinicalMapper<O,T>,
+    hpo: Arc<O>
 }
 
-impl<'a> From<&'a FullCsrOntology> for Fenominal<'a, FullCsrOntology> {
+impl<O, T> Fenominal<O, T> 
+    where
+    O: OntologyTerms<T> + HierarchyWalks,
+    T: MinimalTerm + Synonymous  
+    {
+
+    pub fn new(hpo: Arc<O>)-> Self {
+        let hpo_arc = Arc::clone(&hpo);
+        Self {
+            clinical_mapper: ClinicalMapper::new(hpo),
+            hpo: hpo_arc
+        }
+    }
+}    
+
+/* 
+impl<O, T> From<&'a FullCsrOntology> for Fenominal<'a, FullCsrOntology> {
     fn from(value: &'a FullCsrOntology) -> Self {
         Self {
             hpo: value,
             clinical_mapper: ClinicalMapper::new(value),
         }
     }
-}
+}*/
 
 /// Map an input text to HPO terms.
 ///
 /// This implementation is appropriate for use cases where we want a set of unique terms
 /// but do not care about their location in the original text.
-impl<'a, O> TextMiner<TermId> for Fenominal<'a, O> {
+impl<O, T> TextMiner<TermId> for Fenominal<O, T> where
+        O: OntologyTerms<T> + HierarchyWalks,
+        T: MinimalTerm + Synonymous{
     fn process(&self, text: &str) -> Vec<TermId> {
         self.clinical_mapper
             .map_text(text)
@@ -144,7 +169,9 @@ impl<'a, O> TextMiner<TermId> for Fenominal<'a, O> {
 ///
 /// This implementation retains information about the hit coordinates
 /// with respect to the source `text`.
-impl TextMiner<FenominalHit> for Fenominal<'_, FullCsrOntology> {
+impl<O, T> TextMiner<FenominalHit> for Fenominal<O, T> where
+        O: OntologyTerms<T> + HierarchyWalks,
+        T: MinimalTerm + Synonymous {
     fn process(&self, text: &str) -> Vec<FenominalHit> {
         let mut hits = vec![];
         for mt in self.clinical_mapper.map_text(text) {
@@ -158,8 +185,10 @@ impl TextMiner<FenominalHit> for Fenominal<'_, FullCsrOntology> {
     }
 }
 
-impl<'a, O> Fenominal<'a, O> {
-    fn mined_term_to_hit<T>(&self, mined_term: &MinedTerm) -> Result<FenominalHit, String>
+impl<O, T> Fenominal<O, T> where
+        O: OntologyTerms<T> + HierarchyWalks,
+        T: MinimalTerm + Synonymous {
+    fn mined_term_to_hit(&self, mined_term: &MinedTerm) -> Result<FenominalHit, String>
     where
         O: OntologyTerms<T>,
         T: MinimalTerm,

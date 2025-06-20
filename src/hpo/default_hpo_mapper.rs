@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use ontolius::{
     ontology::{HierarchyWalks, OntologyTerms},
@@ -22,7 +22,7 @@ impl DefaultHpoMapper {
     /// with a longer label in the future.
     pub const MAX_HPO_TERM_TOKEN_COUNT: usize = 14;
 
-    pub fn new<O, T>(hpo: &O) -> Self
+    pub fn new<O, T>(hpo: Arc<O>) -> Self
     where
         O: OntologyTerms<T> + HierarchyWalks,
         T: MinimalTerm + Synonymous,

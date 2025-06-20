@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::{collections::{HashMap, HashSet}, sync::Arc};
 
 use ontolius::{
     common::hpo::PHENOTYPIC_ABNORMALITY,
@@ -32,7 +32,7 @@ use crate::fenominal_traits::TermIdToTextMapper;
 //     }
 // }
 
-pub fn get_text_to_hpo_term_map<O, T>(hpo: &O) -> HashMap<String, TermId>
+pub fn get_text_to_hpo_term_map<O, T>(hpo: Arc<O>) -> HashMap<String, TermId>
 where
     O: OntologyTerms<T> + HierarchyWalks,
     T: MinimalTerm + Synonymous,

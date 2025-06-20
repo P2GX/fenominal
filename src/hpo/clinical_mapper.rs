@@ -16,6 +16,8 @@
 //! }
 //! ```
 
+use std::{marker::PhantomData, sync::Arc};
+
 use super::{default_hpo_mapper::DefaultHpoMapper, sentence_mapper::SentenceMapper};
 use crate::{core_document::CoreDocument, mined_term::MinedTerm};
 use ontolius::{
@@ -24,23 +26,31 @@ use ontolius::{
     TermId,
 };
 
-pub struct ClinicalMapper {
+pub struct ClinicalMapper<O, T> where
+        O: OntologyTerms<T> + HierarchyWalks,
+        T: MinimalTerm + Synonymous {
     sentence_mapper: SentenceMapper,
+    /// Ontolius HPO object
+    ontology: Arc<O>,
+    /// The following is required because T is only used in the trait bounds.
+    _marker: PhantomData<T>,
 }
 
-impl ClinicalMapper {
-    pub fn new<O, T>(hpo: &O) -> Self
-    where
+impl<O, T> ClinicalMapper<O, T> where
         O: OntologyTerms<T> + HierarchyWalks,
-        T: MinimalTerm + Synonymous,
+        T: MinimalTerm + Synonymous {
+    pub fn new(hpo: Arc<O>) -> Self
     {
+        let hpo_arc = Arc::clone(&hpo);
         let default_hpo_mapper = DefaultHpoMapper::new(hpo);
-
         Self {
             sentence_mapper: SentenceMapper::new(default_hpo_mapper),
+            ontology: hpo_arc,
+            _marker: PhantomData::<T>,
         }
     }
 
+    /* 
     pub fn from_map<'a, I>(text_to_tid_map: I) -> Self
     where
         I: IntoIterator<Item = (&'a str, &'a TermId)>,
@@ -49,7 +59,7 @@ impl ClinicalMapper {
         ClinicalMapper {
             sentence_mapper: SentenceMapper::new(default_hpo_mapper),
         }
-    }
+    }*/
 
     pub fn map_text(&self, text: &str) -> Vec<MinedTerm> {
         let core_document = CoreDocument::new(text);

@@ -30,8 +30,6 @@ pub struct SentenceMapper {
 
 impl SentenceMapper {
     pub fn new(mapper: DefaultHpoMapper) -> Self {
-        let texts = vec!["median cleft lip".to_string()];
-        let contains = mapper.get_match(&texts).is_some();
         SentenceMapper { hpo_mapper: mapper }
     }
 
