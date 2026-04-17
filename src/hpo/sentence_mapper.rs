@@ -57,11 +57,42 @@ impl<O, T>  SentenceMapper<O, T> where
 
     pub fn map_sentence(&self, simple_sentence: &SimpleSentence) -> Result<Vec<FenominalHit>, String> {
         let tokens: &[SimpleToken] = simple_sentence.get_tokens();
-        let start_pos = simple_sentence.get_start_pos();
+        let start_pos = simple_sentence.get_start_pos(); // ????
+        let start_pos_offset = simple_sentence.get_start_pos();
+         let is_excluded = self.has_negation(tokens);
         let mut candidates: HashMap<usize, Vec<FenominalHit>> = HashMap::new();
-        let max_partition_heuristic = min(10, tokens.len());
-        let is_excluded = self.has_negation(tokens);
-        for i in 1..=max_partition_heuristic {
+        // Check window sizes from largest to smallest
+        let max_window = min(DefaultHpoMapper::MAX_HPO_TERM_TOKEN_COUNT, tokens.len());
+        let max_partition_heuristic = min(10, tokens.len()); // ?
+
+        for window_size in 1..=max_window {
+            // .windows(n) slides 1 token at a time: [0,1,2], [1,2,3], [2,3,4]...
+            for chunk in tokens.windows(window_size) {
+                let string_chunks: Vec<String> = chunk
+                    .iter()
+                    .map(|stoken| stoken.get_lc_original_token().to_string())
+                    .collect();
+                if let Some(hpo_match) = self.hpo_mapper.get_match(&string_chunks) {
+                    let hpo_id = hpo_match.get_hpo_id();
+                    let term = self.ontology.term_by_id(hpo_id)
+                        .ok_or_else(|| format!("could not retrieve term for {}", hpo_id))?;
+                    // Get character positions from the tokens
+                    let start_char = chunk[0].get_start_pos() + start_pos_offset;
+                    let end_char = chunk[chunk.len() - 1].get_end_pos() + start_pos_offset;
+
+                    let hit = FenominalHit::new(
+                        hpo_id.to_string(),
+                        term.name(),
+                        start_char..end_char,
+                        !is_excluded,
+                    );
+
+                    candidates.entry(start_char).or_default().push(hit);
+                }
+            }
+        }
+       /*
+      //  for i in 1..=max_partition_heuristic {
             let partition = Partition::new(&tokens, i);
             for j in 0..partition.count() {
                 let chunk = partition
@@ -127,6 +158,27 @@ impl<O, T>  SentenceMapper<O, T> where
                     // advance to the last position of the current match
                     // note that this is String position convention, and so the next hist could start at
                     // currentSpan, but cannot be less than currentSpan without overlapping.
+                }
+            }
+        } */
+       // --- GREEDY SELECTION ---
+        let mut start_pos_list: Vec<usize> = candidates.keys().cloned().collect();
+        start_pos_list.sort_unstable(); // Use unstable for better perf on primitives
+
+        let mut mapped_sentence_part_list = Vec::new();
+        let mut current_span_end = 0;
+
+        for start_pos in start_pos_list {
+            // Skip if this start position is inside an already accepted longer match
+            if start_pos < current_span_end {
+                continue;
+            }
+
+            if let Some(hits) = candidates.get(&start_pos) {
+                // Pick the hit that stretches furthest to the right
+                if let Some(longest) = hits.iter().max_by_key(|h| h.get_span().end) {
+                    current_span_end = longest.get_span().end;
+                    mapped_sentence_part_list.push(longest.clone());
                 }
             }
         }
