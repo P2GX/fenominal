@@ -57,7 +57,7 @@ impl HpoConcept {
     }
 
     /// We will use the presence or absence of commas to decide 'ties' between matches that are equally
-    ///long. If a match does not have a comma, we will consider it is a better mqtch.
+    ///long. If a match does not have a comma, we will consider it is a better match.
     pub fn has_comma(&self) -> bool {
         self.original_concept.contains(",")
     }

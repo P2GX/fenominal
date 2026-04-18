@@ -84,6 +84,9 @@ impl DefaultHpoMapper {
             let vec_of_str_refs: Vec<&str> = tokens.iter().map(|s| s.as_str()).collect();
             // Convert Vec<&str> to slice &[&str]
             let slice: &[&str] = &vec_of_str_refs;
+            if tokens.len() == 3 {
+                println!("{:?}", slice);
+            }
             return matcher.get_match(slice);
         }
     }

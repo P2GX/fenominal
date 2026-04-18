@@ -64,6 +64,7 @@
 
 mod core_document;
 pub mod fenominal;
+pub mod text_util;
 mod hpo;
 mod simple_sentence;
 mod simple_token;

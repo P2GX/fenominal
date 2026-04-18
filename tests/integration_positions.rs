@@ -2,7 +2,7 @@ mod common;
 
 use std::sync::Arc;
 
-use ontolius::ontology::csr::FullCsrOntology;
+use ontolius::{ontology::{OntologyTerms, csr::FullCsrOntology}, term::{MinimalTerm, Term}};
 use fenominal::{fenominal::{Fenominal, FenominalHit}};
 use rstest::rstest;
 use common::hpo;
@@ -21,23 +21,40 @@ fn test_parse_para_1(
     let fenominal_hits: Vec<FenominalHit> = fenominal.process(PARA1);
     let hydronephrosis_start = PARA1.find("hydronephrosis").unwrap();
     let hydrouterer_start = PARA1.find("dilated ureter").unwrap();
-    let hydrouterer_start_2 = PARA1.find("dilated ureter").unwrap();
-    let hydrouterer_start_2 = PARA1[hydrouterer_start_2 + 1..]
-        .find("dilated ureter")
-        .map(|i| i + hydrouterer_start_2 + 1)
-        .unwrap();
+    let mcp_start = PARA1.find("median cleft palate").unwrap();
+  
 
     for h in &fenominal_hits {
         println!("{:?}",h);
     }
-    assert_eq!(3, fenominal_hits.len());
+    /*
+    Expect:
+    FenominalHit { term_id: "HP:0000126", label: "Hydronephrosis", span: 210..224, is_observed: true }
+    FenominalHit { term_id: "HP:0000072", label: "Hydroureter", span: 239..253, is_observed: true }
+    FenominalHit { term_id: "HP:0009099", label: "Median cleft palate", span: 599..618, is_observed: true }
+    FenominalHit { term_id: "HP:0000072", label: "Hydroureter", span: 725..739, is_observed: true }
+    */
+    assert_eq!(4, fenominal_hits.len());
     let hit1 = fenominal_hits.get(0).unwrap();
     let hit2 = fenominal_hits.get(1).unwrap();
     let hit3 = fenominal_hits.get(2).unwrap();
     
     assert_eq!(hydronephrosis_start, hit1.span.start);
     assert_eq!(hydrouterer_start, hit2.span.start);
-    assert_eq!(hydrouterer_start_2, hit3.span.start);
+    assert_eq!(mcp_start, hit3.span.start);
+}
+
+
+#[rstest]
+fn test_failure_to_thrive_exists_in_hpo( hpo: Arc<FullCsrOntology>) {
+    // for some reason, Failure to thrive does not git picked up by fenominal
+    // This is a sanity check that the term exists in the ontology file we 
+    // are using for testing.
+    let ftt_label = "Failure to thrive";
+    let found = hpo.iter_terms()
+        .map(MinimalTerm::name)
+        .any(|t| t == ftt_label);
+    assert!(found);
 }
 
 #[rstest]
