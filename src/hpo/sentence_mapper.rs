@@ -14,6 +14,7 @@ use ontolius::ontology::{HierarchyWalks, OntologyTerms};
 use ontolius::term::{MinimalTerm, Synonymous};
 use std::collections::HashSet;
 use crate::fenominal::FenominalHit;
+use crate::stopwords::is_stop;
 use crate::{hpo::partition::Partition, simple_sentence::SimpleSentence, simple_token::SimpleToken};
 use crate::hpo::default_hpo_mapper::DefaultHpoMapper;
 
@@ -57,28 +58,33 @@ impl<O, T>  SentenceMapper<O, T> where
 
     pub fn map_sentence(&self, simple_sentence: &SimpleSentence) -> Result<Vec<FenominalHit>, String> {
         let tokens: &[SimpleToken] = simple_sentence.get_tokens();
-        let start_pos = simple_sentence.get_start_pos(); // ????
+        // remove stop words from tokens
+        let nonstop_tokens: Vec<&SimpleToken> = tokens
+            .iter()
+            .filter(|tk| !is_stop(tk.get_original_token()))
+            .collect();
         let start_pos_offset = simple_sentence.get_start_pos();
          let is_excluded = self.has_negation(tokens);
         let mut candidates: HashMap<usize, Vec<FenominalHit>> = HashMap::new();
         // Check window sizes from largest to smallest
         let max_window = min(DefaultHpoMapper::MAX_HPO_TERM_TOKEN_COUNT, tokens.len());
-        let max_partition_heuristic = min(10, tokens.len()); // ?
 
         for window_size in 1..=max_window {
+            println!("window size={}", window_size);
             // .windows(n) slides 1 token at a time: [0,1,2], [1,2,3], [2,3,4]...
-            for chunk in tokens.windows(window_size) {
-                let string_chunks: Vec<String> = chunk
+            for chunks in nonstop_tokens.windows(window_size) {
+                let string_chunks: Vec<String> = chunks
                     .iter()
                     .map(|stoken| stoken.get_lc_original_token().to_string())
                     .collect();
+                println!("string_chunks={:?}", string_chunks);
                 if let Some(hpo_match) = self.hpo_mapper.get_match(&string_chunks) {
                     let hpo_id = hpo_match.get_hpo_id();
                     let term = self.ontology.term_by_id(hpo_id)
                         .ok_or_else(|| format!("could not retrieve term for {}", hpo_id))?;
                     // Get character positions from the tokens
-                    let start_char = chunk[0].get_start_pos() + start_pos_offset;
-                    let end_char = chunk[chunk.len() - 1].get_end_pos() + start_pos_offset;
+                    let start_char = chunks[0].get_start_pos() + start_pos_offset;
+                    let end_char = chunks[chunks.len() - 1].get_end_pos() + start_pos_offset;
 
                     let hit = FenominalHit::new(
                         hpo_id.to_string(),
@@ -88,6 +94,8 @@ impl<O, T>  SentenceMapper<O, T> where
                     );
 
                     candidates.entry(start_char).or_default().push(hit);
+                } else {
+                    println!("No match for {:?}", string_chunks);
                 }
             }
         }

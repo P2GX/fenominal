@@ -2,7 +2,7 @@ mod common;
 
 use std::sync::Arc;
 
-use ontolius::ontology::csr::FullCsrOntology;
+use ontolius::{ontology::{OntologyTerms, csr::FullCsrOntology}, term::{MinimalTerm, Term}};
 use fenominal::{fenominal::{Fenominal, FenominalHit}};
 use rstest::rstest;
 use common::hpo;
@@ -42,6 +42,19 @@ fn test_parse_para_1(
     assert_eq!(hydronephrosis_start, hit1.span.start);
     assert_eq!(hydrouterer_start, hit2.span.start);
     assert_eq!(mcp_start, hit3.span.start);
+}
+
+
+#[rstest]
+fn test_failure_to_thrive_exists_in_hpo( hpo: Arc<FullCsrOntology>) {
+    // for some reason, Failure to thrive does not git picked up by fenominal
+    // This is a sanity check that the term exists in the ontology file we 
+    // are using for testing.
+    let ftt_label = "Failure to thrive";
+    let found = hpo.iter_terms()
+        .map(MinimalTerm::name)
+        .any(|t| t == ftt_label);
+    assert!(found);
 }
 
 #[rstest]
