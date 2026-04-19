@@ -17,12 +17,13 @@ pub struct SimpleSentence {
 impl SimpleSentence {
     pub fn new(text: &str, start: usize, end: usize) -> Self {
         let mut stokens = Vec::new();
-        for mat in WORD_PATTERN.find_iter(text) {
+        for (i, mat) in WORD_PATTERN.find_iter(text).enumerate() {
             stokens.push(SimpleToken::new(
                 mat.as_str(),
                 mat.as_str(),
                 mat.start(),
                 mat.end(),
+                i
             ));
         }
         SimpleSentence {

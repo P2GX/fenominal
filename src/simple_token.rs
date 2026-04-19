@@ -1,3 +1,5 @@
+use std::process::id;
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -9,10 +11,11 @@ pub struct SimpleToken {
     lowercase_token: String,
     start_pos: usize,
     end_pos: usize,
+    pub(crate) index: usize, // Position in the original sentence
 }
 
 impl SimpleToken {
-    pub fn new<S: Into<String>>(token: S, orig_token: S, start: usize, end: usize) -> Self {
+    pub fn new<S: Into<String>>(token: S, orig_token: S, start: usize, end: usize, idx: usize) -> Self {
         let o_token_string: String = orig_token.into();
         let lc_token = o_token_string.to_lowercase();
         SimpleToken {
@@ -21,6 +24,7 @@ impl SimpleToken {
             lowercase_token: lc_token,
             start_pos: start,
             end_pos: end,
+            index: idx,
         }
     }
 
@@ -54,8 +58,9 @@ mod test {
     #[test]
     fn test_lower_case() {
         let tests = vec![("Orange", "orange"), ("Apple", "apple"), ("pear", "pear")];
+        let fake_idx = 42 as usize;
         for test in tests {
-            let st = SimpleToken::new(test.0, test.0, 1, 2);
+            let st = SimpleToken::new(test.0, test.0, 1, 2, fake_idx);
             assert_eq!(test.1, st.get_lc_original_token());
         }
     }

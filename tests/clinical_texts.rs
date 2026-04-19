@@ -30,7 +30,7 @@ fn test_parse_para_1(
     hpo: Arc<FullCsrOntology>
 ) {
     let fenominal = Fenominal::new(hpo);
-    let sanitized = fenominal::text_util::sanitize(SENTENCE_1);
+    let sanitized = fenominal::util::text_util::sanitize(SENTENCE_1);
     let fenominal_hits: Vec<FenominalHit> = fenominal.process(&sanitized);
     assert_eq!(3, fenominal_hits.len());
 }

@@ -6,16 +6,17 @@
 //! splits the input text into sentences, and then performance text mining
 //! on each sentence in this module.
 
+use std::cmp::min;
 use std::marker::PhantomData;
 use std::sync::Arc;
-use std::{cmp::min, collections::HashMap};
 use once_cell::sync::Lazy;
 use ontolius::ontology::{HierarchyWalks, OntologyTerms};
 use ontolius::term::{MinimalTerm, Synonymous};
 use std::collections::HashSet;
 use crate::fenominal::FenominalHit;
 use crate::stopwords::is_stop;
-use crate::{hpo::partition::Partition, simple_sentence::SimpleSentence, simple_token::SimpleToken};
+use crate::util::negex::NegEx;
+use crate::{simple_sentence::SimpleSentence, simple_token::SimpleToken};
 use crate::hpo::default_hpo_mapper::DefaultHpoMapper;
 
 /// This is a set of words that we use to indentify exclusion (negation) of phenotypic abnormality
@@ -41,7 +42,7 @@ pub struct SentenceMapper<O, T> where
     hpo_mapper: DefaultHpoMapper,
     ontology: Arc<O>,
     _marker: PhantomData<T>,
-
+    negex: NegEx,
 }
 
 impl<O, T>  SentenceMapper<O, T> where
@@ -53,10 +54,15 @@ impl<O, T>  SentenceMapper<O, T> where
             hpo_mapper: mapper,
             ontology: ontology.clone(),
             _marker: PhantomData,
+            negex: NegEx::from_embedded(),
         }
     }
 
     pub fn map_sentence(&self, simple_sentence: &SimpleSentence) -> Result<Vec<FenominalHit>, String> {
+        let full_sentence_refs: Vec<&str> = simple_sentence.get_tokens()
+            .iter()
+            .map(|t| t.get_lc_original_token())
+            .collect();
         let tokens: &[SimpleToken] = simple_sentence.get_tokens();
         // remove stop words from tokens
         let nonstop_tokens: Vec<&SimpleToken> = tokens
@@ -64,7 +70,6 @@ impl<O, T>  SentenceMapper<O, T> where
             .filter(|tk| !is_stop(tk.get_original_token()))
             .collect();
         let start_pos_offset = simple_sentence.get_start_pos();
-        let is_excluded = self.has_negation(tokens);
         let mut mapped_sentence_part_list = Vec::new();
         // Check window sizes from largest to smallest
         let max_window = min(DefaultHpoMapper::MAX_HPO_TERM_TOKEN_COUNT, tokens.len());
@@ -88,6 +93,11 @@ impl<O, T>  SentenceMapper<O, T> where
                     // Get character positions from the tokens
                     let start_char = chunks[0].get_start_pos() + start_pos_offset;
                     let end_char = chunks[chunks.len() - 1].get_end_pos() + start_pos_offset;
+                    // The range relative to the FULL original sentence
+                    let first_token_idx = chunks[0].index;
+                    let last_token_idx = chunks[chunks.len() - 1].index;
+                    let hit_idx_range = first_token_idx..(last_token_idx + 1);
+                    let is_excluded = self.negex.is_negated(&full_sentence_refs, hit_idx_range);
 
                     let hit = FenominalHit::new(
                         hpo_id.to_string(),
@@ -120,7 +130,7 @@ impl<O, T>  SentenceMapper<O, T> where
 #[cfg(test)]
 mod tests {
 
-    use std::str::FromStr;
+    use std::{collections::HashMap, str::FromStr};
 
     use ontolius::TermId;
     use rstest::{fixture, rstest};
