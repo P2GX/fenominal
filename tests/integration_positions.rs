@@ -2,8 +2,8 @@ mod common;
 
 use std::sync::Arc;
 
-use ontolius::{ontology::{OntologyTerms, csr::FullCsrOntology}, term::{MinimalTerm, Term}};
-use fenominal::{fenominal::{Fenominal, FenominalHit}};
+use ontolius::{ontology::{OntologyTerms, csr::FullCsrOntology}, term::{MinimalTerm}};
+use fenominal::{Fenominal, FenominalHit};
 use rstest::rstest;
 use common::hpo;
 

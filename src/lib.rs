@@ -10,7 +10,7 @@
 //! use std::io::BufReader;
 //! use std::sync::Arc;
 //! use flate2::bufread::GzDecoder;
-//! use fenominal::fenominal::Fenominal;
+//! use fenominal::Fenominal;
 //! use ontolius::io::OntologyLoaderBuilder;
 //! use ontolius::ontology::csr::FullCsrOntology;
 //!
@@ -40,7 +40,8 @@
 //! use std::io::BufReader;
 //! use std::sync::Arc;
 //! use flate2::bufread::GzDecoder;
-//! use fenominal::fenominal::Fenominal;
+//! use fenominal::Fenominal;
+//! use fenominal::FenominalHit;
 //! use ontolius::io::OntologyLoaderBuilder;
 //! use ontolius::ontology::csr::FullCsrOntology;
 //! let hp_path = "resources/hp.v2025-03-03.json.gz";
@@ -50,7 +51,7 @@
 //!            ).expect("HPO should be well formatted");
 //! let hpo = Arc::new(hpo);
 //! let fenominal = Fenominal::new(hpo);
-//! use fenominal::fenominal::FenominalHit;
+//! 
 //!
 //! // Perform text mining
 //! let text = "Intellectual disability, macrocephaly, scoliosis";
@@ -63,9 +64,15 @@
 //! 
 
 mod core_document;
-pub mod fenominal;
-pub mod util;
+mod fenominal;
+mod util;
 mod hpo;
 mod simple_sentence;
 mod simple_token;
 mod stopwords;
+
+
+pub use crate::util::text_util::sanitize;
+pub use crate::util::text_util::sentence_split;
+pub use crate::fenominal::FenominalHit;
+pub use crate::fenominal::Fenominal;

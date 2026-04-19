@@ -3,7 +3,7 @@ mod common;
 use std::sync::Arc;
 
 use ontolius::ontology::csr::FullCsrOntology;
-use fenominal::{fenominal::{Fenominal, FenominalHit}};
+use fenominal::{Fenominal, FenominalHit};
 use rstest::rstest;
 use common::hpo;
 
@@ -30,7 +30,7 @@ fn test_parse_para_1(
     hpo: Arc<FullCsrOntology>
 ) {
     let fenominal = Fenominal::new(hpo);
-    let sanitized = fenominal::util::text_util::sanitize(SENTENCE_1);
+    let sanitized = fenominal::sanitize(SENTENCE_1);
     let fenominal_hits: Vec<FenominalHit> = fenominal.process(&sanitized);
     assert_eq!(3, fenominal_hits.len());
 }

@@ -1,8 +1,8 @@
 use clap::Parser;
 use ontolius::io::OntologyLoaderBuilder;
 use ontolius::ontology::csr::FullCsrOntology;
-use fenominal::fenominal::Fenominal;
-use fenominal::fenominal::FenominalHit;
+use fenominal::Fenominal;
+use fenominal::FenominalHit;
 use std::error::Error;
 use std::path::Path;
 use std::path::PathBuf;
