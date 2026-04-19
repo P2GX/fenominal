@@ -20,7 +20,7 @@ static PUNCTUATION_GAP: Lazy<Regex> = Lazy::new(||  Regex::new(r"\s+([.,!?;:])")
 /// # Examples
 ///
 /// ```
-/// use fenominal::text_util::sanitize;
+/// use fenominal::sanitize;
 ///
 /// let input = "Frequent  emesis , with feeds resulting in failure to thrive (FTT).";
 /// let output = sanitize(input);
