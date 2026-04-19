@@ -71,23 +71,15 @@ impl DefaultHpoMapper {
     /// # Returns
     ///
     /// An HpoConceptHit or None
-    pub fn get_match(&self, tokens: &Vec<String>) -> Option<HpoConcept> {
+    pub fn get_match(&self, tokens: &[&str]) -> Option<HpoConcept> {
         if tokens.len() > DefaultHpoMapper::MAX_HPO_TERM_TOKEN_COUNT {
-            println!("Malformed input vector: {:?}", tokens);
+            println!("Malformed input. Slice length too large: {}", tokens.len());
             return None;
         } else if tokens.is_empty() {
-            println!("Empty input vector: {:?}", tokens);
             return None;
         } else {
             let matcher = self.wordcount_to_matcher.get(&tokens.len())?;
-            // TODO -- Figure out API -- should it be a reference to Vec<String> or a slice?
-            let vec_of_str_refs: Vec<&str> = tokens.iter().map(|s| s.as_str()).collect();
-            // Convert Vec<&str> to slice &[&str]
-            let slice: &[&str] = &vec_of_str_refs;
-            if tokens.len() == 3 {
-                println!("{:?}", slice);
-            }
-            return matcher.get_match(slice);
+            return matcher.get_match(tokens);
         }
     }
 

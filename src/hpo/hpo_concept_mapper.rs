@@ -17,13 +17,11 @@ impl HpoConceptMapper {
 
     pub fn get_match(&self, words: &[&str]) -> std::option::Option<HpoConcept> {
         let token_set: HashSet<String> = words.iter().map(|&s| s.to_string()).collect();
-        println!("n_words= {}; token_set={:?}",self.n_words(), token_set);
         for token in &token_set {
             let concept_list = self.component_token_to_concept_map.get(token);
             match concept_list {
                 Some(clist) => {
                     for cpt in clist {
-                        println!("cpt={:?}", cpt);
                         if cpt.non_stop_set_equal(&token_set) {
                             // We have a match!
                             return Some(cpt.clone());

@@ -6,15 +6,19 @@ use serde::{Deserialize, Serialize};
 pub struct SimpleToken {
     token: String,
     original_token: String,
+    lowercase_token: String,
     start_pos: usize,
     end_pos: usize,
 }
 
 impl SimpleToken {
     pub fn new<S: Into<String>>(token: S, orig_token: S, start: usize, end: usize) -> Self {
+        let o_token_string: String = orig_token.into();
+        let lc_token = o_token_string.to_lowercase();
         SimpleToken {
             token: token.into(),
-            original_token: orig_token.into(),
+            original_token: o_token_string,
+            lowercase_token: lc_token,
             start_pos: start,
             end_pos: end,
         }
@@ -24,8 +28,8 @@ impl SimpleToken {
         &self.original_token
     }
 
-    pub fn get_lc_original_token(&self) -> String {
-        self.original_token.to_lowercase()
+    pub fn get_lc_original_token(&self) -> &str {
+        &self.lowercase_token
     }
 
     pub fn get_start_pos(&self) -> usize {

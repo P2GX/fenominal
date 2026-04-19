@@ -22,12 +22,11 @@ fn test_parse_para_1(
     let hydronephrosis_start = PARA1.find("hydronephrosis").unwrap();
     let hydrouterer_start = PARA1.find("dilated ureter").unwrap();
     let mcp_start = PARA1.find("median cleft palate").unwrap();
-  
 
-    for h in &fenominal_hits {
+    /*
+     for h in &fenominal_hits {
         println!("{:?}",h);
     }
-    /*
     Expect:
     FenominalHit { term_id: "HP:0000126", label: "Hydronephrosis", span: 210..224, is_observed: true }
     FenominalHit { term_id: "HP:0000072", label: "Hydroureter", span: 239..253, is_observed: true }

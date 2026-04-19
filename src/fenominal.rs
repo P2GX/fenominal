@@ -82,7 +82,6 @@ impl<O, T> Fenominal<O, T>
         let sentences = core_document.get_sentences();
         let mut mapped_parts: Vec<FenominalHit> = Vec::new();
         for ss in sentences {
-            println!("simple sentence={:?}", ss);
             match self.sentence_mapper.map_sentence(ss) {
                 Ok(sentence_parts) => mapped_parts.extend(sentence_parts),
                 Err(e) => println!("Could not map: {}", e.to_ascii_lowercase()),
@@ -91,9 +90,34 @@ impl<O, T> Fenominal<O, T>
         mapped_parts
     }
 
-    pub fn process(&self, text: &str) -> Vec<FenominalHit> {
+    pub fn process(
+        &self, 
+        text: &str) -> Vec<FenominalHit> {
         self.map_text(text)
     }
+
+    pub fn process_text<F>(
+        &self, 
+        text: &str, 
+        mut on_progress: F)
+        -> Vec<FenominalHit>
+        where F: FnMut(u32, u32) {
+            let core_document = CoreDocument::new(text);
+        let sentences = core_document.get_sentences();
+        let n_sent = sentences.len() as u32;
+        let i = 0 as u32;
+        let mut mapped_parts: Vec<FenominalHit> = Vec::new();
+        for ss in sentences {
+            match self.sentence_mapper.map_sentence(ss) {
+                Ok(sentence_parts) => mapped_parts.extend(sentence_parts),
+                Err(e) => println!("Could not map: {}", e.to_ascii_lowercase()),
+            }
+            on_progress(i, n_sent);
+        }
+        mapped_parts
+    }
+
+
 }    
 
 
