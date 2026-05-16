@@ -6,10 +6,10 @@
 /// 
 
 pub mod autocompleter;
+use serde::{Serialize,Deserialize};
 
-
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct HpoMatch {
     /// HPO identifier of the matched concept, e.g., HP:0011995
     pub id: String,
