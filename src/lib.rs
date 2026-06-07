@@ -64,7 +64,7 @@
 //! 
 
 
-mod autocomplete;
+pub mod autocomplete;
 mod core_document;
 mod fenominal;
 mod util;
