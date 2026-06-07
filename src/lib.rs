@@ -78,5 +78,5 @@ pub use crate::util::text_util::sanitize;
 pub use crate::util::text_util::sentence_split;
 pub use crate::fenominal::FenominalHit;
 pub use crate::fenominal::Fenominal;
-pub use crate::autocomplete::HpoMatch;
+pub use crate::autocomplete::autocompleter::HpoMatch;
 pub use crate::autocomplete::autocompleter::AutoCompleter;
