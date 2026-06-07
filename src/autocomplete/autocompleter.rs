@@ -32,7 +32,8 @@ use ontolius::common::hpo::PHENOTYPIC_ABNORMALITY;
 use ontolius::term::{MinimalTerm, Synonymous};
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use regex::Regex;
-use serde::{Serialize,Deserialize};
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
 
 
 
