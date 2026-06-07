@@ -8,6 +8,7 @@
 pub mod autocompleter;
 use serde::{Serialize,Deserialize};
 
+
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct HpoMatch {

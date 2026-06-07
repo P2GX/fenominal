@@ -26,14 +26,13 @@
 //! ```
 
 use std::sync::Arc;
+use std::sync::OnceLock;
 use ontolius::ontology::{HierarchyWalks, OntologyTerms};
 use ontolius::common::hpo::PHENOTYPIC_ABNORMALITY;
 use ontolius::term::{MinimalTerm, Synonymous};
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
+use regex::Regex;
 use crate::autocomplete::HpoMatch;
-
-
-
 
 
 
@@ -76,8 +75,8 @@ impl AutoCompleter {
                         let label = synonym.name.clone();
                         hpo_auto_complete.push(HpoMatch {
                             id: id_str.clone(),
-                            label: label,
-                            matched_text: primary_label.clone(),
+                            label: primary_label.clone(),
+                            matched_text: label, 
                         });
                     }
                 },
@@ -91,6 +90,14 @@ impl AutoCompleter {
     pub fn search_hpo(&self, query: &str, limit: usize) -> Vec<HpoMatch> {
         let matcher = SkimMatcherV2::default();
         let query_lower = query.to_lowercase();
+        static HPO_ID_REGEX: OnceLock<Regex> = OnceLock::new();
+        let re = HPO_ID_REGEX.get_or_init(|| Regex::new(r"HP:\d{7}").unwrap());
+        if let Some(mat) = re.find(query) {
+            let exact_id = mat.as_str();
+            if let Some(exact_match) = self.hpo_auto_complete.iter().find(|item| item.id == exact_id) {
+                return vec![exact_match.clone()];
+            }
+        }
         // get fuzzy matches to query
         let mut matches: Vec<_> = self.hpo_auto_complete
             .iter()
