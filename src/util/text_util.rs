@@ -4,7 +4,9 @@ use regex::Regex;
 use once_cell::sync::Lazy;
 
 // We split on punctuation followed by a space, keeping the punctuation
-static SENTENCE_DELIMS: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?<=[.!?])\s+").unwrap());
+static SENTENCE_DELIMSOLD: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?<=[.!?])\s+").unwrap());
+static SENTENCE_DELIMS: Lazy<Regex> = Lazy::new(|| Regex::new(r"([.!?])\s+").unwrap());
+
 // Remove spaces that occur before punctuation marks
 static PUNCTUATION_GAP: Lazy<Regex> = Lazy::new(||  Regex::new(r"\s+([.,!?;:])").unwrap());
 
@@ -41,8 +43,21 @@ pub fn sanitize(input_text: &str) -> String {
 
 
 pub fn sentence_split(input_text: &str) -> Vec<String> {
-    let sentences: Vec<&str> = SENTENCE_DELIMS.split(input_text).collect();
-    return sentences.iter().map(|s| s.to_string()).collect();
+    let mut sentences = Vec::new();
+    let mut last_end = 0;
+    for caps in SENTENCE_DELIMS.captures_iter(input_text) {
+        let whole_match = caps.get(0).unwrap();   // punctuation + whitespace
+        let punct = caps.get(1).unwrap();         // just the punctuation char
+
+        sentences.push(input_text[last_end..punct.end()].to_string());
+        last_end = whole_match.end();
+    }
+
+    if last_end < input_text.len() {
+        sentences.push(input_text[last_end..].to_string());
+    }
+
+    sentences
 }
 
 
@@ -75,11 +90,5 @@ mod test {
     fn test_sanitize_cases(#[case] input: &str, #[case] expected: &str) {
         assert_eq!(sanitize(input), expected);
     }
-
-    
-
-
-
-
 
 }
