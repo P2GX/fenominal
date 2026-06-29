@@ -5,12 +5,62 @@ use std::sync::Arc;
 
 use crate::core_document::CoreDocument;
 use crate::hpo::sentence_mapper::SentenceMapper;
+use crate::simple_sentence::SimpleSentence;
+use crate::{sanitize, sentence_split};
 use ontolius::ontology::{HierarchyWalks, OntologyTerms};
 use ontolius::term::{MinimalTerm, Synonymous};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+
+/// A sentence of the original text
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct FenominalSentence { 
+    /// Start offset of this sentence within the original source text.
+    /// Units match `FenominalHit::span` (so hit spans and sentence
+    /// start are directly comparable).
+    pub start: usize,
+    /// 0-based position of this sentence within the document
+    /// (i.e. the 1st sentence has order 0, the 2nd has order 1, ...).
+    pub order: usize,
+    pub original_text: String,
+    pub hits: Vec<FenominalHit>
+}
+
+impl FenominalSentence {
+    pub fn new(
+        order: usize, 
+        start: usize, 
+        original: impl Into<String>, 
+        hits: Vec<FenominalHit>) -> Self {
+        Self { 
+            order, 
+            start, 
+            original_text: original.into(),
+            hits 
+        }
+    }
+
+    pub fn hits(&self) -> &[FenominalHit] {
+        &self.hits
+    }
+
+    pub fn text_length(&self) -> usize {
+        self.original_text.len()
+    }
+}
+
+impl fmt::Display for FenominalSentence {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "Sentence #{} (start @ {}):", self.order, self.start)?;
+        for hit in &self.hits {
+            writeln!(f, "  {}", hit)?;
+        }
+        Ok(())
+    }
+}
 
 /// A named entity identified by text mining.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -94,6 +144,34 @@ impl<O, T> Fenominal<O, T>
         &self, 
         text: &str) -> Vec<FenominalHit> {
         self.map_text(text)
+    }
+
+    fn mine_sentence(&self, sentence: &str, order: usize, start: usize) -> FenominalSentence {
+        let sentence_end = start + sentence.len() - 1;
+        let ss = SimpleSentence::new(sentence, start, sentence_end);
+         match self.sentence_mapper.map_sentence(&ss) {
+                Ok(hits) => {
+                    return FenominalSentence::new(order, start, sentence,hits);
+                },
+                Err(e) => {
+                    // should rarely, if ever happen!
+                    println!("Could not map: {}", e.to_ascii_lowercase());
+                    return FenominalSentence::new(order, start, sentence,Vec::default());
+                }
+        }
+    }
+
+    pub fn mine_sentences(&self, text: &str) -> Vec<FenominalSentence> {
+        let sanitized_text = sanitize(text);
+        let sentences = sentence_split(&sanitized_text);
+        let mut start = 0 as usize;
+        let mut fenom_sent_list = Vec::with_capacity(sentences.len());
+        for (i, s) in sentences.into_iter().enumerate() {
+            let fsent = self.mine_sentence(&s, i, start);
+            start += fsent.text_length() +1;
+            fenom_sent_list.push(fsent);
+        }
+        fenom_sent_list
     }
 
 }    
