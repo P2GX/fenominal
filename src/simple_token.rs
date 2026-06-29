@@ -1,4 +1,7 @@
-use std::process::id;
+//! SimpleToken
+//! Represents one token (usually, a word) in the original text
+//! Includes string and its position and a lower-case version
+//!
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
