@@ -18,7 +18,7 @@ fn test_parse_para_1(
     hpo: Arc<FullCsrOntology>
 ) {
     let fenominal = Fenominal::new(hpo);
-    let fenominal_hits: Vec<FenominalHit> = fenominal.process(PARA1);
+    let fenominal_hits: Vec<FenominalHit> = fenominal.process(PARA1).unwrap();
     let hydronephrosis_start = PARA1.find("hydronephrosis").unwrap();
     let hydrouterer_start = PARA1.find("dilated ureter").unwrap();
     let mcp_start = PARA1.find("median cleft palate").unwrap();
@@ -64,7 +64,7 @@ fn test_median_cp(
     let text = "Physical examination showed a cleft palate which had been surgically corrected";
     let hpo_arc = hpo.clone();
     let fenominal = Fenominal::new(hpo_arc);
-    let fenominal_hits: Vec<FenominalHit> = fenominal.process(text);
+    let fenominal_hits: Vec<FenominalHit> = fenominal.process(text).unwrap();
     assert_eq!(1, fenominal_hits.len());
     let cp = fenominal_hits[0].clone();
     assert_eq!("Cleft palate", cp.label);

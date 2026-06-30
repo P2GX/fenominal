@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn Error>>{
     let hpo: FullCsrOntology = loader.load_from_path(hp_json_path_str).unwrap();
     let hpo = Arc::new(hpo);
     let fenominal = Fenominal::new(hpo);
-    let fenominal_hits: Vec<FenominalHit> = fenominal.process(&input_string);
+    let fenominal_hits: Vec<FenominalHit> = fenominal.process(&input_string)?;
     
     // pretty-print the JSON response
     let pretty_fenominal_hits = serde_json::to_string_pretty(&fenominal_hits).unwrap();
