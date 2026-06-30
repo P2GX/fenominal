@@ -13,8 +13,9 @@ use once_cell::sync::Lazy;
 use ontolius::ontology::{HierarchyWalks, OntologyTerms};
 use ontolius::term::{MinimalTerm, Synonymous};
 use std::collections::HashSet;
-use crate::fenominal::FenominalHit;
+use crate::models::fenominal_model::FenominalHit;
 use crate::stopwords::is_stop;
+use crate::util::error::FenominalError;
 use crate::util::negex::NegEx;
 use crate::{simple_sentence::SimpleSentence, simple_token::SimpleToken};
 use crate::hpo::default_hpo_mapper::DefaultHpoMapper;
@@ -58,7 +59,7 @@ impl<O, T>  SentenceMapper<O, T> where
         }
     }
 
-    pub fn map_sentence(&self, simple_sentence: &SimpleSentence) -> Result<Vec<FenominalHit>, String> {
+    pub fn map_sentence(&self, simple_sentence: &SimpleSentence) -> Result<Vec<FenominalHit>, FenominalError> {
         let full_sentence_refs: Vec<&str> = simple_sentence.get_tokens()
             .iter()
             .map(|t| t.get_lc_original_token())
@@ -89,7 +90,7 @@ impl<O, T>  SentenceMapper<O, T> where
                 if let Some(hpo_match) = self.hpo_mapper.get_match(&string_chunk_refs) {
                     let hpo_id = hpo_match.get_hpo_id();
                     let term = self.ontology.term_by_id(hpo_id)
-                        .ok_or_else(|| format!("could not retrieve term for {}", hpo_id))?;
+                        .ok_or_else(|| FenominalError::term_retrieval_error(hpo_id))?;
                     // Get character positions from the tokens
                     let start_char = chunks[0].get_start_pos() + start_pos_offset;
                     let end_char = chunks[chunks.len() - 1].get_end_pos() + start_pos_offset;

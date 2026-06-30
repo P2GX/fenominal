@@ -55,7 +55,7 @@
 //!
 //! // Perform text mining
 //! let text = "Intellectual disability, macrocephaly, scoliosis";
-//! let hits: Vec<FenominalHit> = fenominal.process(&text);
+//! let hits: Vec<FenominalHit> = fenominal.process(&text).unwrap();
 //!
 //! let labels: Vec<_> = hits.iter().map(|hit| &hit.label).collect();
 //! assert_eq!(labels, &["Intellectual disability", "Macrocephaly", "Scoliosis"]);
@@ -64,20 +64,22 @@
 //! 
 
 
-pub mod autocomplete;
+mod autocomplete;
 mod core_document;
 mod fenominal;
 mod util;
 mod hpo;
+mod models;
 mod simple_sentence;
 mod simple_token;
 mod stopwords;
 
 
+pub use crate::autocomplete::{AutoCompleter, HpoMatch};
+pub use crate::models::fenominal_model::{
+    FenominalHit, FenominalHitSegment, FenominalSegment, FenominalSentence, FenominalText,
+};
+pub use crate::fenominal::Fenominal;
 pub use crate::util::text_util::sanitize;
 pub use crate::util::text_util::sentence_split;
-pub use crate::fenominal::FenominalSentence;
-pub use crate::fenominal::FenominalHit;
-pub use crate::fenominal::Fenominal;
-pub use crate::autocomplete::HpoMatch;
-pub use crate::autocomplete::AutoCompleter;
+pub use crate::util::error::FenominalError;

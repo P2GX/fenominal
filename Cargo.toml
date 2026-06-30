@@ -1,6 +1,6 @@
 [package]
 name = "fenominal"
-version = "0.2.9"
+version = "0.2.10"
 
 description = "HPO-based text mining. Rust version of fenominal"
 edition = "2021"
@@ -21,6 +21,7 @@ regex = "1.12.3"
 rstest = "0.26.1"
 serde = { version = "1.0.228", optional = true }
 serde_json = { version = "1.0.150", optional = true }
+thiserror = "2.0.18"
 
 [features]
 default = ["serde"]
