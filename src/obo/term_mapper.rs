@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use ontolius::{
     ontology::{TaxonomyWalk, OntologyTerms},
-    term::{MinimalTerm, Synonymous},
+    term::Synonymous,
     TermId,
 };
 

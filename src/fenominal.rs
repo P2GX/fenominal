@@ -14,7 +14,6 @@ use ontolius::io::OntologyLoaderBuilder;
 use ontolius::ontology::csr::FullCsrOntology;
 use ontolius::ontology::{TaxonomyWalk, OntologyTerms};
 use ontolius::term::{MinimalTerm, Synonymous};
-use ontolius::term::simple::SimpleTerm;
 
 #[cfg(feature = "serde")]
 

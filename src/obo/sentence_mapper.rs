@@ -7,12 +7,9 @@
 //! on each sentence in this module.
 
 use std::cmp::min;
-use std::marker::PhantomData;
 use std::sync::Arc;
-use once_cell::sync::Lazy;
 use ontolius::ontology::{TaxonomyWalk, OntologyTerms};
 use ontolius::term::{MinimalTerm, Synonymous};
-use std::collections::HashSet;
 use crate::models::fenominal_model::FenominalHit;
 use crate::models::ontology_profile::OntologyProfile;
 use crate::stopwords::is_stop;
@@ -21,22 +18,6 @@ use crate::util::negex::NegEx;
 use crate::{simple_sentence::SimpleSentence, simple_token::SimpleToken};
 use crate::obo::term_mapper::TermMapper;
 
-/// This is a set of words that we use to indentify exclusion (negation) of phenotypic abnormality
-///
-/// e.g. "Proband 1 did not have arachnodactyly" would be flagged as negated because of the word "not".
-static NEGATION_CLUES: Lazy<HashSet<String>> = Lazy::new(|| {
-    let mut set = HashSet::new();
-    set.insert("no".to_string());
-    set.insert("nil".to_string());
-    set.insert("denies".to_string());
-    set.insert("not".to_string());
-    set.insert("exclude".to_string());
-    set.insert("excluded".to_string());
-    set.insert("screen".to_string());
-    set.insert("screening".to_string());
-    set.insert("normal".to_string());
-    set
-});
 
 pub struct SentenceMapper<O> where
         O: OntologyTerms + TaxonomyWalk,
@@ -118,11 +99,7 @@ impl<O>  SentenceMapper<O> where
         Ok(mapped_sentence_part_list)
     }
 
-    fn has_negation(&self, tokens: &[SimpleToken]) -> bool {
-        tokens
-            .iter()
-            .any(|token| NEGATION_CLUES.contains(token.get_lc_original_token()))
-    }
+   
 }
 
 
@@ -137,8 +114,6 @@ mod tests {
     use rstest::{fixture, rstest};
 
     use crate::obo::concept::Concept;
-
-    use super::*;
 
     
 #[fixture]

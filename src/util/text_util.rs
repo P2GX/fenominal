@@ -4,7 +4,6 @@ use regex::Regex;
 use once_cell::sync::Lazy;
 
 // We split on punctuation followed by a space, keeping the punctuation
-static SENTENCE_DELIMSOLD: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?<=[.!?])\s+").unwrap());
 static SENTENCE_DELIMS: Lazy<Regex> = Lazy::new(|| Regex::new(r"([.!?])\s+").unwrap());
 
 // Remove spaces that occur before punctuation marks

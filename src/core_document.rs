@@ -3,7 +3,6 @@ use crate::simple_sentence::SimpleSentence;
 pub struct CoreDocument {
     original_text: String,
     sentences: Vec<SimpleSentence>,
-    //private final static Set<Character> sentenceEndPunctuation = Set.of('.', '!', '?');
 }
 
 

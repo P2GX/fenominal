@@ -105,8 +105,7 @@ use pyo3::prelude::*;
 #[pyclass(name = "Fenominal")]
 pub struct PyFenominal {
     inner: crate::Fenominal<
-        ontolius::ontology::csr::FullCsrOntology, 
-        ontolius::term::simple::SimpleTerm
+        ontolius::ontology::csr::FullCsrOntology
     >,
 }
 
