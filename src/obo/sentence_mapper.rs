@@ -10,7 +10,7 @@ use std::cmp::min;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use once_cell::sync::Lazy;
-use ontolius::ontology::{HierarchyWalks, OntologyTerms};
+use ontolius::ontology::{TaxonomyWalk, OntologyTerms};
 use ontolius::term::{MinimalTerm, Synonymous};
 use std::collections::HashSet;
 use crate::models::fenominal_model::FenominalHit;
@@ -38,24 +38,23 @@ static NEGATION_CLUES: Lazy<HashSet<String>> = Lazy::new(|| {
     set
 });
 
-pub struct SentenceMapper<O, T> where
-        O: OntologyTerms<T> + HierarchyWalks,
-        T: MinimalTerm + Synonymous {
+pub struct SentenceMapper<O> where
+        O: OntologyTerms + TaxonomyWalk,
+        O::Term: MinimalTerm + Synonymous {
     term_mapper: TermMapper,
     ontology: Arc<O>,
-    _marker: PhantomData<T>,
     negex: NegEx,
 }
 
-impl<O, T>  SentenceMapper<O, T> where
-        O: OntologyTerms<T> + HierarchyWalks,
-        T: MinimalTerm + Synonymous {
+impl<O>  SentenceMapper<O> where
+        O: OntologyTerms + TaxonomyWalk,
+        O::Term: MinimalTerm + Synonymous {
+       
      pub fn new(ontology: Arc<O>, profile: &OntologyProfile) -> Self {
         let mapper = TermMapper::new(ontology.clone(), profile);
         SentenceMapper { 
             term_mapper: mapper,
             ontology: ontology.clone(),
-            _marker: PhantomData,
             negex: NegEx::from_embedded(),
         }
     }

@@ -1,7 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use ontolius::{
-    ontology::{HierarchyWalks, OntologyTerms},
+    ontology::{TaxonomyWalk, OntologyTerms},
     term::{MinimalTerm, Synonymous},
     TermId,
 };
@@ -24,12 +24,12 @@ impl TermMapper {
    /// Otherwise the real max is computed dynamically from the loaded terms.
     pub const DEFAULT_MAX_TOKEN_COUNT: usize = 14;
 
-    pub fn new<O, T>(
+    pub fn new<O>(
         ontology: Arc<O>,
         profile: &OntologyProfile) -> Self
     where
-        O: OntologyTerms<T> + HierarchyWalks,
-        T: MinimalTerm + Synonymous,
+        O: OntologyTerms + TaxonomyWalk,
+        O::Term: Synonymous,
     {
         let text_to_term_map = get_text_to_term_map(ontology, profile);
         TermMapper::from_map(text_to_term_map.iter().map(|(k, v)| (k.as_ref(), v)))
@@ -93,18 +93,18 @@ impl TermMapper {
         self.max_tokens
     }
 
-    pub fn for_hpo<O, T>(ontology: Arc<O>) -> Self
+    pub fn for_hpo<O>(ontology: Arc<O>) -> Self
     where
-        O: OntologyTerms<T> + HierarchyWalks,
-        T: MinimalTerm + Synonymous,
+        O: OntologyTerms + TaxonomyWalk,
+        O::Term: Synonymous,
     {
         Self::new(ontology, &OntologyProfile::hpo())
     }
 
-    pub fn for_maxo<O, T>(ontology: Arc<O>) -> Self
+    pub fn for_maxo<O>(ontology: Arc<O>) -> Self
     where
-        O: OntologyTerms<T> + HierarchyWalks,
-        T: MinimalTerm + Synonymous,
+        O: OntologyTerms + TaxonomyWalk,
+        O::Term: Synonymous,
     {
         Self::new(ontology, &OntologyProfile::maxo())
     }

@@ -12,7 +12,7 @@ use crate::util::error::FenominalError;
 use crate::{sanitize, sentence_split};
 use ontolius::io::OntologyLoaderBuilder;
 use ontolius::ontology::csr::FullCsrOntology;
-use ontolius::ontology::{HierarchyWalks, OntologyTerms};
+use ontolius::ontology::{TaxonomyWalk, OntologyTerms};
 use ontolius::term::{MinimalTerm, Synonymous};
 use ontolius::term::simple::SimpleTerm;
 
@@ -22,16 +22,16 @@ use ontolius::term::simple::SimpleTerm;
 
 
 /// Fenominal text mining.
-pub struct Fenominal<O, T> where
-        O: OntologyTerms<T> + HierarchyWalks,
-        T: MinimalTerm + Synonymous  {
-    sentence_mapper: SentenceMapper<O,T>,
+pub struct Fenominal<O> where
+        O: OntologyTerms + TaxonomyWalk,
+        O::Term: MinimalTerm + Synonymous  {
+    sentence_mapper: SentenceMapper<O>,
 }
 
-impl<O, T> Fenominal<O, T> 
+impl<O> Fenominal<O> 
     where
-    O: OntologyTerms<T> + HierarchyWalks,
-    T: MinimalTerm + Synonymous  
+    O: OntologyTerms + TaxonomyWalk,
+    O::Term: MinimalTerm +Synonymous,
     {
 
     fn new(hpo: Arc<O>, profile: &OntologyProfile)-> Self {
@@ -41,11 +41,19 @@ impl<O, T> Fenominal<O, T>
         }
     }
 
-    pub fn new_hpo(ontology: Arc<O>) -> Self {
+    pub fn new_hpo(ontology: Arc<O>) -> Self 
+        where
+            O: OntologyTerms + TaxonomyWalk, 
+            O::Term: MinimalTerm + Synonymous 
+    {
         Self::new(ontology, &OntologyProfile::hpo())
     }
 
-    pub fn new_maxo(ontology: Arc<O>) -> Self {
+    pub fn new_maxo(ontology: Arc<O>) -> Self 
+     where
+        O: OntologyTerms + TaxonomyWalk, 
+        O::Term: MinimalTerm + Synonymous 
+    {
         Self::new(ontology, &OntologyProfile::maxo())
     }
 
@@ -92,7 +100,7 @@ impl<O, T> Fenominal<O, T>
 
 
 
-impl Fenominal<FullCsrOntology, SimpleTerm> {
+impl Fenominal<FullCsrOntology> {
     pub fn from_hpo_json(path: &str) -> Result<Self, String> {
         let loader = OntologyLoaderBuilder::new().obographs_parser().build();
         let ontology: FullCsrOntology = loader

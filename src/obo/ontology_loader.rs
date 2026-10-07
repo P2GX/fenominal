@@ -1,21 +1,19 @@
 use std::{collections::{HashMap, HashSet}, sync::Arc};
 
 use ontolius::{
-    ontology::{HierarchyWalks, OntologyTerms},
-    term::{MinimalTerm, Synonymous},
-    TermId,
+    Identified, TermId, ontology::{OntologyTerms, TaxonomyWalk}, term::{MinimalTerm, Synonymous},
 };
 
 use crate::models::ontology_profile::OntologyProfile;
 
 
-pub fn get_text_to_term_map<O, T>(
+pub fn get_text_to_term_map<O>(
     ontology: Arc<O>,
     profile: &OntologyProfile,
 ) -> HashMap<String, TermId>
 where
-    O: OntologyTerms<T> + HierarchyWalks,
-    T: MinimalTerm + Synonymous,
+    O: OntologyTerms + TaxonomyWalk,
+    O::Term: Synonymous,
 {
     let mut text_to_tid_map = HashMap::new();
     // These are commmon false-positive results related to HPO synonyms that occur in other contexts

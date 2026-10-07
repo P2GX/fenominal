@@ -27,7 +27,7 @@
 
 use std::sync::Arc;
 use std::sync::OnceLock;
-use ontolius::ontology::{HierarchyWalks, OntologyTerms};
+use ontolius::ontology::{TaxonomyWalk, OntologyTerms};
 use ontolius::common::hpo::PHENOTYPIC_ABNORMALITY;
 use ontolius::term::{MinimalTerm, Synonymous};
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
@@ -57,10 +57,11 @@ pub struct AutoCompleter {
 impl AutoCompleter {
     /// Create a new AutoCompleter object
     /// Can be initializyed aith Arc<FullCsrOntology> (smart pointer to HPO Ontolius object)
-    pub fn new<O, T>(hpo: Arc<O>) -> Self where
-        O: OntologyTerms<T> + HierarchyWalks,
-        T: MinimalTerm + Synonymous, {
-        let acomplete = Self::initialize_hpo_autocomplete(hpo.clone());
+    pub fn new<O>(hpo: Arc<O>) -> Self 
+        where
+            O: OntologyTerms + TaxonomyWalk,
+            O::Term: MinimalTerm + Synonymous {
+        let acomplete = Self::initialize_hpo_autocomplete::<O>(hpo.clone());
         Self {
             hpo_auto_complete: acomplete
         }
@@ -68,9 +69,9 @@ impl AutoCompleter {
     
 
     /// Set up autocomplete functionality 
-    fn initialize_hpo_autocomplete<O, T>(hpo: Arc<O>) -> Vec<OntologyMatch> where
-        O: OntologyTerms<T> + HierarchyWalks,
-        T: MinimalTerm + Synonymous, {
+    fn initialize_hpo_autocomplete<O>(hpo: Arc<O>) -> Vec<OntologyMatch> where
+        O: OntologyTerms + TaxonomyWalk,
+        O::Term: MinimalTerm + Synonymous {
         let mut hpo_auto_complete: Vec<OntologyMatch> = Vec::new();
         for tid in  hpo.iter_descendant_ids(&PHENOTYPIC_ABNORMALITY) {
             match hpo.term_by_id(tid) {
